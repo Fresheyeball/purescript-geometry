@@ -1,0 +1,16 @@
+{
+  "name": "purescript-geometry",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "**/*Test.purs",
+    "node_modules",
+    "bower_components",
+    "tests",
+    "example",
+    "tmp"
+  ],
+  "dependencies": {
+    "purescript-math": "~0.1.0"
+  }
+}
