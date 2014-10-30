@@ -65,8 +65,8 @@ gulp.task "test:unit" ->
 
 gulp.task "doc" ->
   gulp.src "src/**/*.purs"
-    .pipe purescript.docgen()
-    .pipe gulp.dest "DocGen.md"
+    .pipe gulp-purescript.docgen!
+    .pipe gulp.dest "README.md"
 
 # gulp.task "test" -> run-sequence "build:test" "test:unit"
 gulp.task "test" -> <[build:test]>
