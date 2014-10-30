@@ -36,9 +36,6 @@ instance eqPoint :: (Eq a) => Eq (Point a) where
   (==) (Point x y) (Point x' y') = x == x' && y == y'
   (/=) x y = not $ x == y
 
-instance semigroupPoint  :: Semigroup (Point Number) where
-  (<>) (Point x y) (Point x' y') = Point (x + x' / 2) (y + y' / 2)
-
 dist :: Point Number -> Point Number -> Number
 dist p q = sqrt $ l22dist p q
 
