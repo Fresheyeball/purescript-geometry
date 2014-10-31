@@ -13,5 +13,10 @@
   "dependencies": {
     "purescript-math": "~0.1.0"
   },
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "devDependencies": {
+    "purescript-mocha": "~0.0.2",
+    "purescript-chai": "*",
+    "purescript-quickcheck": "~0.2.2"
+  }
 }

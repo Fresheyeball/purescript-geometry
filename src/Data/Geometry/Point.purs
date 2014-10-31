@@ -43,5 +43,7 @@ l22dist :: Point Number -> Point Number -> Number
 l22dist p q = let a = q |-| p in (getX a)^2 + (getY a)^2
 
 distance :: Point Number -> Point Number -> Number
-distance (Point x y) (Point x' y') = 
-  let f a b = abs (a - b)^2 in sqrt $ f x x' + f y y'
+distance (Point x y) (Point x' y') = let 
+    a = x' - x
+    b = y' - y
+  in sqrt $ a * a + b * b

@@ -24,3 +24,6 @@ instance eqLine :: (Eq a) => Eq (Line a) where
 
 instance perimeterLine :: Perimeter (Line Number) where
   perimeter (Line a b) = distance a b
+
+instance areaLine :: Area (Line Number) where
+  area _ = 0
