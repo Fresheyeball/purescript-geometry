@@ -5,6 +5,8 @@ module Data.Geometry.Point where
 --
 
 import Math
+import Data.Function(on)
+import Data.Monoid
 
 data Point a = Point a a
 
@@ -29,6 +31,12 @@ getY (Point _ y) = y
 instance functorPoint :: Functor Point where
   (<$>) f (Point x y) = Point (f x) (f y)
 
+instance applyPoint :: Apply Point where 
+  (<*>) (Point fa fb) (Point a b) = Point (fa a) (fb b)
+
+instance applicativePoint :: Applicative Point where 
+  pure x = Point x x 
+
 instance showPoint :: (Show a) => Show (Point a) where
   show (Point x y) = "Point " ++ show x ++ " " ++ show y
 
@@ -36,14 +44,10 @@ instance eqPoint :: (Eq a) => Eq (Point a) where
   (==) (Point x y) (Point x' y') = x == x' && y == y'
   (/=) x y = not $ x == y
 
-dist :: Point Number -> Point Number -> Number
-dist p q = sqrt $ l22dist p q
+distance :: Point Number -> Point Number -> Number
+distance p q = sqrt $ l22dist p q
 
 l22dist :: Point Number -> Point Number -> Number
-l22dist p q = let a = q |-| p in (getX a)^2 + (getY a)^2
+l22dist p q = let a = q |-| p in on (+) sq (getX a) (getY a)
+  where sq = flip pow 2
 
-distance :: Point Number -> Point Number -> Number
-distance (Point x y) (Point x' y') = let 
-    a = x' - x
-    b = y' - y
-  in sqrt $ a * a + b * b

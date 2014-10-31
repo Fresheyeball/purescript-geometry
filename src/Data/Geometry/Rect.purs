@@ -3,6 +3,7 @@ module Data.Geometry.Rect where
 import Data.Geometry
 import Data.Geometry.Point
 import Data.Geometry.Line
+import Data.Geometry.Size
 import Data.Function
 import Math
 

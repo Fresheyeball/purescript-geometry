@@ -1,6 +1,8 @@
 module Main where
 
-import Control.Apply((*>))
+import Control.Monad.Eff
 
-main = Data.Geometry.Rect.Test.init *> Debug.Trace.trace "what"
-  -- Data.Geometry.Line.Test.init
+main = do
+  Data.Geometry.Rect.Test.init 
+  Data.Geometry.Line.Test.init
+  Data.Geometry.Point.Test.initt
