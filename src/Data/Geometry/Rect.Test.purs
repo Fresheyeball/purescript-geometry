@@ -3,11 +3,16 @@ module Data.Geometry.Rect.Test where
 import Data.Geometry
 import Data.Geometry.Rect
 import Data.Geometry.Point
+import Data.Geometry.Point.Test
 import Data.Geometry.Line
 
 import Test.Mocha
 import Test.Chai
 import Test.QuickCheck
+import Test.Classes
+
+instance arbRect :: (Arbitrary a) => Arbitrary (Rect a) where
+  arbitrary = Rect <$> arbitrary <*> arbitrary
 
 init = describe "Rect" do
 
@@ -34,6 +39,11 @@ init = describe "Rect" do
         in ps == [Point x y, Point x y', Point x' y', Point x' y]
     in quickCheck go
 
-  it "eq" $ quickCheck \x -> 
-    Rect (Point x x) (Point x x) == Rect (Point x x) (Point x x)       &&
-    Rect (Point x x) (Point x x) /= Rect (Point x x) (Point x (x + 1))
+  it "eq" $ quickCheck \x y -> 
+    Rect (Point x y) (Point x y) == Rect (Point x y) (Point x y)       &&
+    Rect (Point x y) (Point x y) /= Rect (Point x y) (Point x (y + 1))
+
+  let r = Rect (Point 0 0) (Point 0 0)
+
+  it "functor"     $ checkFunctor r 
+  it "applicative" $ checkApplicative r r r

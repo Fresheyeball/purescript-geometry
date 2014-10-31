@@ -20,7 +20,7 @@ instance areaSizes :: Area (Size Number) where
 instance showSize :: (Show a) => Show (Size a) where
   show (Size { width = w, height = h })
      = "Size { width  : " ++ show w ++ 
-                 ", height : " ++ show h ++ "}"
+            ", height : " ++ show h ++ "}"
 
 instance functorSize :: Functor Size where
   (<$>) f (Size { width = w,     height = h     }) 

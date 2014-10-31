@@ -44,9 +44,10 @@ init = describe "Line" do
     let l = mkLine x y x' y'
     in  l == l && l /= Line (Point x y) (Point x' (y' + 1))
 
-  it "applicative functor" let l = mkLine 0 0 0 0 in do
-    checkFunctor l 
-    checkApplicative l l l 
+  let l = mkLine 0 0 0 0
+
+  it "functor"     $ checkFunctor l 
+  it "applicative" $ checkApplicative l l l 
 
   it "area" <<< quickCheck $ \x y x' y' ->
     let l = mkLine x y x' y' in area l == 0
