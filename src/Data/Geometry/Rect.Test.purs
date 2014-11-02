@@ -25,10 +25,9 @@ init = describe "Rect" do
       r'   = Rect (Point x y) (Point 0 0)
       r''  = Rect (Point x 0) (Point 0 y)
       r''' = Rect (Point 0 y) (Point x 0)
-    in   area r    == x * y
-      && area r'   == x * y
-      && area r''  == x * y
-      && area r''' == x * y 
+      xy   = x * y
+    in xy == area r   && xy == area r'  
+    && xy == area r'' && xy == area r'''
 
   it "show" let r =               Rect (Point 1 2) (Point 3 4)
     in expect (show r) `toEqual` "Rect (Point 1 2) (Point 3 4)"
