@@ -15,9 +15,10 @@ sq = flip pow 2
 
 initt = describe "Point" do 
   
-  it "applicative functor" let p = Point 0 0 in do 
-    checkFunctor p 
-    checkApplicative p p p
+  let p = pure 0 :: Point Number
+
+  it "functor"     $ checkFunctor p 
+  it "applicative" $ checkApplicative p p p
 
   it "show" let l =               Point 1 2 
     in expect (show l) `toEqual` "Point 1 2"

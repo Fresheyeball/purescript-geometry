@@ -1,6 +1,5 @@
 module Data.Geometry.Line.Test where
 
-
 import Data.Geometry
 import Data.Geometry.Point
 import Data.Geometry.Point.Test
@@ -44,7 +43,7 @@ init = describe "Line" do
     let l = mkLine x y x' y'
     in  l == l && l /= Line (Point x y) (Point x' (y' + 1))
 
-  let l = mkLine 0 0 0 0
+  let l = pure 0 :: Line Number
 
   it "functor"     $ checkFunctor l 
   it "applicative" $ checkApplicative l l l 
