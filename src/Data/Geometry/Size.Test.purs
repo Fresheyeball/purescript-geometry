@@ -32,8 +32,8 @@ init = describe "Size" do
   it "functor"     $ checkFunctor s 
   it "applicative" $ checkApplicative s s s 
 
-  it "eq" <<< quickCheck $ \s ->
-    let s' = newSize (getWidth s) (getHeight s + 1)
+  it "eq" <<< quickCheck $ \s a ->
+    let s' = newSize (getWidth s) (getHeight s + a)
     in  s == s && s /= s'
 
 
