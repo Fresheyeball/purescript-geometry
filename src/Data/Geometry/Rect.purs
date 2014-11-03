@@ -37,6 +37,10 @@ instance perimeterRect :: Perimeter (Rect Number) where
   perimeter (Rect (Point x y) (Point x' y')) = 
     let f a b = abs (a - b) * 2 in f x x' + f y y'
 
+instance hasSizeRect :: HasSize (Rect Number) where
+  size (Rect (Point x y) (Point x' y')) = let f a b = abs (a - b)
+    in newSize (f x x') (f y y')
+
 withP a b (Rect (Point x y) (Point x' y')) = Point (x `a` x') (y `b` y')
 
 getTopLeft     = withP min min 

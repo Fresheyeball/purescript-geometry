@@ -5,6 +5,7 @@ import Data.Geometry.Rect
 import Data.Geometry.Point
 import Data.Geometry.Point.Test
 import Data.Geometry.Line
+import Data.Geometry.Size
 
 import Test.Mocha
 import Test.Chai
@@ -38,11 +39,13 @@ init = describe "Rect" do
         in ps == [Point x y, Point x y', Point x' y', Point x' y]
     in quickCheck go
 
-  it "eq" $ quickCheck \x y -> 
-    Rect (Point x y) (Point x y) == Rect (Point x y) (Point x y)       &&
-    Rect (Point x y) (Point x y) /= Rect (Point x y) (Point x (y + 1))
+  it "eq" <<< quickCheck $ \x y -> let r = Rect (Point x y) (Point x y)
+    in r == r && r /= Rect (Point x y) (Point x (y + 1))
 
   let r = Rect (Point 0 0) (Point 0 0)
 
   it "functor"     $ checkFunctor r 
   it "applicative" $ checkApplicative r r r
+
+  it "size" <<< quickCheck $ \r ->
+    let r' = r :: Rect Number in area r' == area (size r')

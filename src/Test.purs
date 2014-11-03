@@ -7,3 +7,4 @@ main = do
   Data.Geometry.Line.Test.init
   Data.Geometry.Point.Test.initt
   Data.Geometry.Circle.Test.inittt
+  Data.Geometry.Size.Test.init

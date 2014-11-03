@@ -5,6 +5,8 @@ import Data.Geometry
 data Size a = Size { width  :: a
                    , height :: a }
 
+newSize w h = Size { width : w, height : h }
+
 getWidth :: forall a. Size a -> a 
 getWidth (Size { width = w }) = w
 
@@ -19,12 +21,20 @@ instance areaSizes :: Area (Size Number) where
 
 instance showSize :: (Show a) => Show (Size a) where
   show (Size { width = w, height = h })
-     = "Size { width  : " ++ show w ++ 
-            ", height : " ++ show h ++ "}"
+     = "Size { width : " ++ show w ++ 
+           ", height : " ++ show h ++ " }"
 
 instance functorSize :: Functor Size where
-  (<$>) f (Size { width = w,     height = h     }) 
+  (<$>) f (Size { width =    w,  height =    h  }) 
          = Size { width : (f w), height : (f h) }
+
+instance applySize :: Apply Size where
+  (<*>) (Size { width =  fw,    height =  fh    })
+        (Size { width =     w,  height =     h  }) 
+      =  Size { width : (fw w), height : (fh h) }
+
+instance applicativeSize :: Applicative Size where
+  pure x = newSize x x
 
 instance eqSize :: (Eq a) => Eq (Size a) where
   (==) (Size { width = w,  height = h  }) 
