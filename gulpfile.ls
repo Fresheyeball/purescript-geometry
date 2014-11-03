@@ -26,7 +26,7 @@ paths =
 options =
   test:
     output: "Test.js"
-    main: false
+    main: true
     externs: "extern.purs"
 
 port   = 3333
@@ -68,6 +68,6 @@ gulp.task "doc" ->
     .pipe gulp-purescript.docgen!
     .pipe gulp.dest "README.md"
 
-# gulp.task "test" -> run-sequence "build:test" "test:unit"
-gulp.task "test" -> <[build:test]>
+gulp.task "test" -> run-sequence "build:test" "test:unit"
+# gulp.task "test" -> <[build:test]>
 gulp.task "travis"  <[test]>

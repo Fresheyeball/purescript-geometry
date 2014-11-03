@@ -17,10 +17,19 @@ instance eqCircle :: (Eq a) => Eq (Circle a) where
   (/=) x y = not $ x == y
 
 instance areaCircle :: Area (Circle Number) where
-  area (Circle _ r) = pi * r^2
+  area (Circle _ r) = pi * r `pow` 2
 
 instance perimeterCircle :: Perimeter (Circle Number) where
-  perimeter (Circle _ r) = pi * r * 2
+  perimeter (Circle _ r) = 2 * pi * r
+
+instance functorCircle :: Functor Circle where
+  (<$>) f (Circle p r) = Circle (f <$> p) (f r)
+
+instance applyCircle :: Apply Circle where
+  (<*>) (Circle fp fr) (Circle p r) = Circle (fp <*> p) (fr r)
+
+instance applicativeCircle :: Applicative Circle where
+  pure x = Circle (pure x) x
 
 circumference :: Circle Number -> Number
 circumference = perimeter
