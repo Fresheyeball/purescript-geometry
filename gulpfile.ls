@@ -29,9 +29,6 @@ options =
     main: true
     externs: "extern.purs"
 
-port   = 3333
-server = express()
-
 build = (k) -> ->
 
   x   = paths[k]
@@ -45,17 +42,17 @@ build = (k) -> ->
 
   psc.on "error" ({message}) ->
     console.error message
-    psc.end()
+    psc.end!
 
   gulp.src x.src 
     .pipe fil 
     .pipe gulp-if /.purs/, psc
     .pipe gulp-if /.ls/,   lsc
     .pipe gulp-concat o.output
-    .pipe gulp-if (k is "prod"), gulp-uglify()
+    .pipe gulp-if (k is "prod"), gulp-uglify!
     .pipe gulp.dest x.dest
 
-gulp.task "build:test", build "test"
+gulp.task "build:test" build "test"
 gulp.task "test:unit" ->
   gulp.src options.test.output .pipe gulp-karma(
     configFile : "./karma.conf.ls"
