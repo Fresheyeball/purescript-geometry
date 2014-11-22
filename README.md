@@ -1,6 +1,11 @@
-# Module Documentation
+## Geometry
+[![Build Status](https://travis-ci.org/Fresheyeball/purescript-geometry.svg?branch=master)](https://travis-ci.org/Fresheyeball/purescript-geometry)
 
-## Module Main
+[![Bower version](https://badge.fury.io/bo/purescript-geometry.svg)](http://badge.fury.io/bo/purescript-geometry)
+[![Dependency Status](https://www.versioneye.com/user/projects/546fe2ef81010687ac000605/badge.svg?style=flat)](https://www.versioneye.com/user/projects/546fe2ef81010687ac000605)
+
+
+Simple geometry types and instances.
 
 ## Module Data.Geometry
 
