@@ -17,8 +17,6 @@ instance arbSize :: (Arbitrary a) => Arbitrary (Size a) where
 
 init = describe "Size" do
 
-  Debug.Trace.print "boobs"
-
   it "getWidth getHeight" <<< quickCheck $ \h w -> 
     let s = Size {    
           height   :  h,      width   :  w } :: Size Number
@@ -40,9 +38,3 @@ init = describe "Size" do
       let s' = newSize (getWidth s) (getHeight s + a)
       in  s == s && s /= s'
   it "eq" $ quickCheck checkEq
-  
-
-
-
-
-
