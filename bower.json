@@ -3,7 +3,8 @@
   "private": false,
   "ignore": [
     "**/.*",
-    "**/*Test.purs",
+    "Test/*",
+    "*Test.purs",
     "node_modules",
     "bower_components",
     "tests",
@@ -11,15 +12,12 @@
     "tmp"
   ],
   "dependencies": {
-    "purescript-math": "~0.1.0"
+    "purescript-math": "*"
   },
   "version": "0.0.2",
   "devDependencies": {
-    "purescript-mocha": "~0.0.2",
+    "purescript-mocha": "*",
     "purescript-chai": "*",
-    "purescript-quickcheck": "~0.2.2"
-  },
-  "resolutions": {
-    "purescript-strings": "~0.4.0"
+    "purescript-quickcheck": "*"
   }
 }
