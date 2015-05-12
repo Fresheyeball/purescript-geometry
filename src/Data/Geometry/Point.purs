@@ -7,55 +7,61 @@ module Data.Geometry.Point where
 import Math
 import Data.Function(on)
 import Data.Monoid
+import Data.Geometry.Axis
 
-data Point a = Point a a
+data Point = Point X Y
 
-class HasPoints g where
-  points :: forall a. g a -> [Point a]
+class Points a where
+  points :: a -> [Point]
 
-instance semiringPoints :: (Semiring a) => Semiring (Point a) where
-  (+) = inerPoint (+)
-  zero = pure zero
-  (*) = inerPoint (*)
-  one = pure one
+class Origin a where
+  origin :: a -> Point
 
-inerPoint :: forall a. (a -> a -> a) -> Point a -> Point a -> Point a
-inerPoint f (Point x y) (Point x' y') =  Point (x `f` x') (y `f` y')
+instance semiringPoint :: Semiring Point where
+  (+) = liftPoint (+)
+  zero = Point zero zero
+  (*) = liftPoint (*)
+  one = Point one one
 
-(|+|) :: Point Number -> Point Number -> Point Number
-(|+|) (Point x y) (Point x' y') =  Point (x + x') (y + y')
+instance modulosemiPoint :: ModuloSemiring Point where
+  (/) = liftPoint (/)
+  mod = liftPoint mod
 
-(|-|) :: Point Number -> Point Number -> Point Number
-(|-|) (Point x y) (Point x' y') =  Point (x - x') (y - y')
+instance ringPoint :: Ring Point where
+  (-) = liftPoint (-)
 
-(|*|) :: Number -> Point Number -> Point Number
-(|*|) s (Point x y) = Point (x * s) (y * s)
+instance divisionRingPoint :: DivisionRing Point
 
-(|@|) :: Point Number -> Point Number -> Number
-(|@|) (Point x y) (Point x' y') = x * x' + y * y'
+instance getXPoint :: GetX Point where
+  getX (Point x _) = x
 
-getX (Point x _) = x
-getY (Point _ y) = y
+instance getYPoint :: GetY Point where
+  getY (Point _ y) = y
 
-instance functorPoint :: Functor Point where
-  (<$>) f (Point x y) = Point (f x) (f y)
+liftPoint :: (Number -> Number -> Number) -> Point -> Point -> Point
+liftPoint f (Point x y) (Point x' y') =  Point (liftX2 f x x') (liftY2 f y y')
 
-instance applyPoint :: Apply Point where
-  (<*>) (Point fa fb) (Point a b) = Point (fa a) (fb b)
+foldrPoint :: (Number -> Number -> Number) -> Number -> Point -> Number
+foldrPoint f a (Point x y) = f (runX x) $ f (runY y) a
 
-instance applicativePoint :: Applicative Point where
-  pure x = Point x x
+foldlPoint :: (Number -> Number -> Number) -> Number -> Point -> Number
+foldlPoint f a (Point x y) = f (runY y) $ f (runX x) a
 
-instance showPoint :: (Show a) => Show (Point a) where
-  show (Point x y) = "Point " ++ show x ++ " " ++ show y
+(|@|) :: Point -> Point -> Number
+(|@|) (Point x y) (Point x' y') = case (x * x') of
+  (X x'') -> case (y * y') of
+    (Y y'') -> x'' + y''
 
-instance eqPoint :: (Eq a) => Eq (Point a) where
+instance showPoint :: Show Point where
+  show (Point x y) = "Point (" ++ show x ++ ") (" ++ show y ++ ")"
+
+instance eqPoint :: Eq Point where
   (==) (Point x y) (Point x' y') = x == x' && y == y'
   (/=) x y = not $ x == y
 
-distance :: Point Number -> Point Number -> Number
+distance :: Point -> Point -> Number
 distance p q = sqrt $ l22dist p q
 
-l22dist :: Point Number -> Point Number -> Number
-l22dist p q = let a = q |-| p in on (+) sq (getX a) (getY a)
+l22dist :: Point -> Point -> Number
+l22dist p q = let a = q - p in on (+) sq (runX $ getX a) (runY $ getY a)
   where sq = flip pow 2
