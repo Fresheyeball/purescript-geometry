@@ -1,23 +1,18 @@
 {
   "name": "purescript-geometry",
-  "private": false,
+  "version": "1.0.0",
+  "moduleType": [
+    "node"
+  ],
   "ignore": [
     "**/.*",
-    "Test/*",
-    "*Test.purs",
     "node_modules",
     "bower_components",
-    "tests",
-    "example",
-    "tmp"
+    "output"
   ],
-  "dependencies": {
-    "purescript-math": "*"
-  },
-  "version": "0.0.4",
   "devDependencies": {
-    "purescript-mocha": "*",
-    "purescript-chai": "*",
-    "purescript-quickcheck": "*"
+    "purescript-quickcheck": "~0.5.2",
+    "purescript-test-unit": "~1.1.5",
+    "purescript-transformers": "~0.5.4"
   }
 }

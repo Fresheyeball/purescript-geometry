@@ -10,8 +10,17 @@ import Data.Monoid
 
 data Point a = Point a a
 
-class HasPoints g where 
+class HasPoints g where
   points :: forall a. g a -> [Point a]
+
+instance semiringPoints :: (Semiring a) => Semiring (Point a) where
+  (+) = inerPoint (+)
+  zero = pure zero
+  (*) = inerPoint (*)
+  one = pure one
+
+inerPoint :: forall a. (a -> a -> a) -> Point a -> Point a -> Point a
+inerPoint f (Point x y) (Point x' y') =  Point (x `f` x') (y `f` y')
 
 (|+|) :: Point Number -> Point Number -> Point Number
 (|+|) (Point x y) (Point x' y') =  Point (x + x') (y + y')
@@ -26,16 +35,16 @@ class HasPoints g where
 (|@|) (Point x y) (Point x' y') = x * x' + y * y'
 
 getX (Point x _) = x
-getY (Point _ y) = y 
+getY (Point _ y) = y
 
 instance functorPoint :: Functor Point where
   (<$>) f (Point x y) = Point (f x) (f y)
 
-instance applyPoint :: Apply Point where 
+instance applyPoint :: Apply Point where
   (<*>) (Point fa fb) (Point a b) = Point (fa a) (fb b)
 
-instance applicativePoint :: Applicative Point where 
-  pure x = Point x x 
+instance applicativePoint :: Applicative Point where
+  pure x = Point x x
 
 instance showPoint :: (Show a) => Show (Point a) where
   show (Point x y) = "Point " ++ show x ++ " " ++ show y
@@ -50,4 +59,3 @@ distance p q = sqrt $ l22dist p q
 l22dist :: Point Number -> Point Number -> Number
 l22dist p q = let a = q |-| p in on (+) sq (getX a) (getY a)
   where sq = flip pow 2
-
