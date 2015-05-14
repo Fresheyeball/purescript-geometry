@@ -42,6 +42,9 @@ instance getYPoint :: GetY (Point x y) y where
 purePoint :: forall a. a -> Point a a
 purePoint x = Point (X x) (Y x)
 
+mapPoint :: forall a. (a -> a) -> Point a a -> Point a a
+mapPoint f = bimap f f
+
 instance bifunctorPoint :: Bifunctor Point where
   bimap f g (Point x y) = Point (f <$> x) (g <$> y)
 
