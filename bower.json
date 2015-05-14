@@ -14,5 +14,8 @@
     "purescript-quickcheck": "~0.5.2",
     "purescript-test-unit": "~1.1.5",
     "purescript-transformers": "~0.5.4"
+  },
+  "dependencies": {
+    "purescript-foldable-traversable": "~0.3.1"
   }
 }

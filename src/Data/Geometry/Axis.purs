@@ -1,85 +1,124 @@
 module Data.Geometry.Axis where
 
+import Control.Apply
+import Control.Comonad
+import Control.Extend
 import Data.Either
 import Data.Function
+import Data.Foldable
+import Data.Traversable
 
-newtype X = X Number
-newtype Y = Y Number
+newtype X a = X a
+newtype Y a = Y a
 
-class GetX a where
-  getX :: a -> X
+class GetX a where getX :: forall b. a -> X b
+class GetY a where getY :: forall b. a -> Y b
 
-class GetY a where
-  getY :: a -> Y
+xSwapY :: forall a. X a -> Y a
+xSwapY = extract >>> Y
 
-runX :: X -> Number
-runX (X x) = x
+ySwapX :: forall a. Y a -> X a
+ySwapX = extract >>> X
 
-runY :: Y -> Number
-runY (Y y) = y
+type Axis a = Either (X a) (Y a)
 
-liftX :: (Number -> Number) -> X -> X
-liftX f = X <<< f <<< runX
+foldXY :: forall a. (a -> a -> a) -> X a -> Y a -> a -> a
+foldXY f (X x) (Y y) = f x <<< f y
+foldYX :: forall a. (a -> a -> a) -> Y a -> X a -> a -> a
+foldYX f (Y y) (X x) = f y <<< f x
 
-liftY :: (Number -> Number) -> Y -> Y
-liftY f = Y <<< f <<< runY
+instance functorX :: Functor X where
+  (<$>) f (X x) = X $ f x
+instance applyX :: Apply X where
+  (<*>) (X fx) (X x) = X $ fx x
+instance applicativeX :: Applicative X where
+  pure = X
+instance bindX :: Bind X where
+  (>>=) (X x) f = f x
+instance monadX :: Monad X
 
-liftX2 :: (Number -> Number -> Number) -> X -> X -> X
-liftX2 f (X x) (X x') = X $ x `f` x'
+instance semiringX :: (Semiring x) => Semiring (X x) where
+  (+) = lift2 (+)
+  zero = X zero
+  (*) = lift2 (*)
+  one = X one
+instance moduloSemiringX :: (ModuloSemiring x) => ModuloSemiring (X x) where
+  mod = lift2 mod
+  (/) = lift2 (/)
+instance ringX :: (Ring x) => Ring (X x) where
+  (-) = lift2 (-)
+instance divisionRightX :: (DivisionRing x) => DivisionRing (X x)
+instance numX :: (Num x) => Num (X x)
 
-liftY2 :: (Number -> Number -> Number) -> Y -> Y -> Y
-liftY2 f (Y y) (Y y') = Y $ y `f` y'
+instance extendX :: Extend X where
+  (<<=) f m = X (f m)
 
-type Axis = Either X Y
+instance comonadX :: Comonad X where
+  extract (X x) = x
 
-foldXY :: (Number -> Number -> Number) -> X -> Y -> Number
-foldXY f (X x) (Y y) = x `f` y
+instance foldableX :: Foldable X where
+  foldr f z (X x) = f x z
+  foldl f z (X x) = f z x
+  foldMap f (X x) = f x
 
-foldYX :: (Number -> Number -> Number) -> Y -> X -> Number
-foldYX f = flip $ foldXY f
+instance traversableX :: Traversable X where
+  traverse f (X x) = X <$> f x
+  sequence (X x) = X <$> x
 
-instance semiringX :: Semiring X where
-  (+) = liftX2 (+)
-  zero = X 0
-  (*) = liftX2 (*)
-  one = X 1
+instance showX :: (Show x) => Show (X x) where
+  show = extract >>> show >>> (++) "X "
 
-instance moduloSemiringX :: ModuloSemiring X where
-  mod = liftX2 mod
-  (/) = liftX2 (/)
-
-instance ringX :: Ring X where
-  (-) = liftX2 (-)
-
-instance divisionRightX :: DivisionRing X
-instance numX :: Num X
-
-instance semiringY :: Semiring Y where
-  (+) = liftY2 (+)
-  zero = Y 0
-  (*) = liftY2 (*)
-  one = Y 1
-
-instance moduloSemiringY :: ModuloSemiring Y where
-  mod = liftY2 mod
-  (/) = liftY2 (/)
-
-instance ringY :: Ring Y where
-  (-) = liftY2 (-)
-
-instance divisionRightY :: DivisionRing Y
-instance numY :: Num Y
-
-instance showX :: Show X where
-  show = runX >>> show >>> (++) "X "
-
-instance showY :: Show Y where
-  show = runY >>> show >>> (++) "Y "
-
-instance eqX :: Eq X where
-  (==) = (==) `on` runX
+instance eqX :: (Eq x) => Eq (X x) where
+  (==) = (==) `on` extract
   (/=) x y = not $ x == y
 
-instance eqY :: Eq Y where
-  (==) = (==) `on` runY
+instance ordX :: (Ord a) => Ord (X a) where
+  compare (X x) (X y) = compare x y
+
+instance functorY :: Functor Y where
+  (<$>) f (Y y) = Y $ f y
+instance applyY :: Apply Y where
+  (<*>) (Y fy) (Y y) = Y $ fy y
+instance applicativeY :: Applicative Y where
+  pure = Y
+instance bindY :: Bind Y where
+  (>>=) (Y y) f = f y
+instance monadY :: Monad Y
+
+instance semiringY :: (Semiring y) => Semiring (Y y) where
+  (+) = lift2 (+)
+  zero = Y zero
+  (*) = lift2 (*)
+  one = Y one
+instance moduloSemiringY :: (ModuloSemiring y) => ModuloSemiring (Y y) where
+  mod = lift2 mod
+  (/) = lift2 (/)
+instance ringY :: (Ring y) => Ring (Y y) where
+  (-) = lift2 (-)
+instance divisionRightY :: (DivisionRing y) => DivisionRing (Y y)
+instance numY :: (Num y) => Num (Y y)
+
+instance extendY :: Extend Y where
+  (<<=) f m = Y (f m)
+
+instance comonadY :: Comonad Y where
+  extract (Y y) = y
+
+instance foldableY :: Foldable Y where
+  foldr f z (Y y) = f y z
+  foldl f z (Y y) = f z y
+  foldMap f (Y y) = f y
+
+instance traversableY :: Traversable Y where
+  traverse f (Y y) = Y <$> f y
+  sequence (Y y) = Y <$> y
+
+instance showY :: (Show y) => Show (Y y) where
+  show = extract >>> show >>> (++) "Y "
+
+instance eqY :: (Eq y) => Eq (Y y) where
+  (==) = (==) `on` extract
   (/=) x y = not $ x == y
+
+instance ordY :: (Ord a) => Ord (Y a) where
+  compare (Y x) (Y y) = compare x y
