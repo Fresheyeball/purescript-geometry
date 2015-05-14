@@ -8,11 +8,13 @@ import Data.Function
 import Data.Foldable
 import Data.Traversable
 
-newtype X a = X a
-newtype Y a = Y a
+newtype X x = X x
+newtype Y y = Y y
 
-class GetX a where getX :: forall b. a -> X b
-class GetY a where getY :: forall b. a -> Y b
+class GetX a b where
+  getX :: a -> X b
+class GetY a b where
+  getY :: a -> Y b
 
 xSwapY :: forall a. X a -> Y a
 xSwapY = extract >>> Y

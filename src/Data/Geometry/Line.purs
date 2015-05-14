@@ -5,7 +5,7 @@
 -- import Data.Geometry.Point
 -- import Data.Geometry.Size
 --
--- data Line = Line Point Point
+-- data Line a = Line (Point a) (Point
 --
 -- newLine :: Number -> Number -> Number -> Number -> Line
 -- newLine x y x' y' = Line (Point (X x) (Y y)) (Point (X x') (Y y'))

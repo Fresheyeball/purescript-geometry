@@ -16,6 +16,9 @@
     "purescript-transformers": "~0.5.4"
   },
   "dependencies": {
-    "purescript-foldable-traversable": "~0.3.1"
+    "purescript-foldable-traversable": "~0.3.1",
+    "purescript-bifunctors": "~0.3.1",
+    "purescript-invariant": "~0.2.0",
+    "purescript-maybe": "~0.2.2"
   }
 }
