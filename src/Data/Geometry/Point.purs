@@ -15,8 +15,8 @@ data Point x y = Point (X x) (Y y)
 newPoint :: forall x y. x -> y -> Point x y
 newPoint x y = Point (X x) (Y y)
 
-class Points a where points :: forall x y. a -> [Point x y]
-class Origin a where origin :: forall x y. a ->  Point x y
+class Points a x y where points :: a -> [Point x y]
+class Origin a x y where origin :: a ->  Point x y
 
 instance semiringPoint :: (Semiring x, Semiring y) => Semiring (Point x y) where
   (+) = bilift2 (+) (+)
