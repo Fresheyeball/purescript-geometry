@@ -2,6 +2,7 @@ module Test.Classes where
 
 import Data.Bifunctor
 import Test.QuickCheck (QC(..), Arbitrary, CoArbitrary, quickCheck)
+import Debug.Trace
 
 -- |
 -- Functor
@@ -9,15 +10,17 @@ import Test.QuickCheck (QC(..), Arbitrary, CoArbitrary, quickCheck)
 
 checkFunctor :: forall f a. (Functor f, Arbitrary a, CoArbitrary a, Arbitrary (f a), Eq (f a)) => f a -> QC Unit
 checkFunctor t = do
+  trace "Functor identity"
   quickCheck $ identity t
+  trace "Functor associativity"
   quickCheck $ associativity t
 
   where
 
-  identity :: forall f a. (Functor f, Arbitrary a, Eq (f a)) => f a -> f a -> Boolean
+  identity :: f a -> f a -> Boolean
   identity _ f = id <$> f == id f
 
-  associativity :: forall f a. (Functor f, Arbitrary a, Eq (f a)) => f a -> f a -> (a -> a) -> (a -> a) -> Boolean
+  associativity :: f a -> f a -> (a -> a) -> (a -> a) -> Boolean
   associativity _ f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
 
 
@@ -28,7 +31,9 @@ checkBifunctor :: forall f a b.
   , Arbitrary (f a b)
   , Eq        (f a b)) => f a b -> QC Unit
 checkBifunctor t = do
+  trace "Bifunctor identity"
   quickCheck $ identity t
+  trace "Bifunctor composition"
   quickCheck $ composition t
 
   where
@@ -58,7 +63,9 @@ checkSemigroup :: forall a.
   ( Eq a
   , Arbitrary a, CoArbitrary a )
   => a -> QC Unit
-checkSemigroup _ = quickCheck associativity
+checkSemigroup _ = do
+  trace "Semigroup associativity"
+  quickCheck associativity
 
   where
 
@@ -71,8 +78,9 @@ checkMonoid :: forall a.
   , Arbitrary a, CoArbitrary a )
   => (a -> a -> a) -> a -> QC Unit
 checkMonoid f identity' = do
-
+  trace "Monoid identity"
   quickCheck identity
+  trace "Monoid <= Semigroup"
   checkSemigroup identity'
 
   where
@@ -86,7 +94,7 @@ checkCommutative :: forall a.
   , Arbitrary a, CoArbitrary a )
   => (a -> a -> a) -> QC Unit
 checkCommutative f = do
-
+  trace "Commutative"
   quickCheck commutative
 
   where
@@ -99,8 +107,9 @@ checkCommutativeMonoid :: forall a.
   , Arbitrary a, CoArbitrary a )
   => (a -> a -> a) -> a -> QC Unit
 checkCommutativeMonoid f identity = do
-
+  trace "CommutativeMonoid <= Monoid"
   checkMonoid f identity
+  trace "CommutativeMonoid <= Commutative"
   checkCommutative f
 
 checkSemiring :: forall a.
@@ -110,10 +119,13 @@ checkSemiring :: forall a.
   , Eq a )
   => a -> QC Unit
 checkSemiring _ = do
-
+  trace "Semiring <= CommutativeMonoid + 0"
   checkCommutativeMonoid (+) (zero :: a)
+  trace "Semiring <= Monoid * 1"
   checkMonoid (*) (one :: a)
+  trace "Semiring annihilate"
   quickCheck annihilate
+  trace "Semiring distributive"
   quickCheck distributive
 
   where
