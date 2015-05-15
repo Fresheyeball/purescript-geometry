@@ -1,5 +1,6 @@
 module Test.Classes where
 
+import Data.Bifunctor
 import Test.QuickCheck (QC(..), Arbitrary, CoArbitrary, quickCheck)
 
 -- |
@@ -10,14 +11,120 @@ checkFunctor :: forall f a. (Functor f, Arbitrary a, CoArbitrary a, Arbitrary (f
 checkFunctor t = do
   quickCheck $ identity t
   quickCheck $ associativity t
-  
+
   where
-  
+
   identity :: forall f a. (Functor f, Arbitrary a, Eq (f a)) => f a -> f a -> Boolean
   identity _ f = id <$> f == id f
 
   associativity :: forall f a. (Functor f, Arbitrary a, Eq (f a)) => f a -> f a -> (a -> a) -> (a -> a) -> Boolean
   associativity _ f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
+
+
+checkBifunctor :: forall f a b.
+  ( Bifunctor f
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b, CoArbitrary b
+  , Arbitrary (f a b)
+  , Eq        (f a b)) => f a b -> QC Unit
+checkBifunctor t = do
+  quickCheck $ identity t
+  quickCheck $ composition t
+
+  where
+
+  identity :: forall f a b.
+    ( Bifunctor f
+    , Arbitrary a
+    , Arbitrary b
+    , Eq (f a b)) => f a b -> f a b -> Boolean
+  identity _ f = bimap id id f == id f
+
+  composition :: forall f a b.
+    ( Bifunctor f
+    , Arbitrary a
+    , Arbitrary b
+    , Eq (f a b))
+    => f a b
+    -> f a b
+    -> (a -> a) -- f1
+    -> (a -> a) -- f2
+    -> (b -> b) -- g1
+    -> (b -> b) -- g2
+    -> Boolean
+  composition _ f f1 f2 g1 g2 = (bimap f1 g1 <<< bimap f2 g2) f == (bimap (f1 <<< f2) (g1 <<< g2)) f
+
+checkSemigroup :: forall a.
+  ( Eq a
+  , Arbitrary a, CoArbitrary a )
+  => a -> QC Unit
+checkSemigroup _ = quickCheck associativity
+
+  where
+
+  associativity :: a -> a -> a -> (a -> a -> a) -> Boolean
+  associativity a b c f = (a `f` b) `f` c == a `f` (b `f` c)
+
+
+checkMonoid :: forall a.
+  ( Eq a
+  , Arbitrary a, CoArbitrary a )
+  => (a -> a -> a) -> a -> QC Unit
+checkMonoid f identity' = do
+
+  quickCheck identity
+  checkSemigroup identity'
+
+  where
+
+  identity :: a -> Boolean
+  identity a = a == a         `f` identity'
+            && a == identity' `f` a
+
+checkCommutative :: forall a.
+  ( Eq a
+  , Arbitrary a, CoArbitrary a )
+  => (a -> a -> a) -> QC Unit
+checkCommutative f = do
+
+  quickCheck commutative
+
+  where
+
+  commutative :: a -> a -> Boolean
+  commutative a b = a `f` b == b `f` a
+
+checkCommutativeMonoid :: forall a.
+  ( Eq a
+  , Arbitrary a, CoArbitrary a )
+  => (a -> a -> a) -> a -> QC Unit
+checkCommutativeMonoid f identity = do
+
+  checkMonoid f identity
+  checkCommutative f
+
+checkSemiring :: forall a.
+  ( Semiring a
+  , Arbitrary a
+  , CoArbitrary a
+  , Eq a )
+  => a -> QC Unit
+checkSemiring _ = do
+
+  checkCommutativeMonoid (+) (zero :: a)
+  checkMonoid (*) (one :: a)
+  quickCheck annihilate
+  quickCheck distributive
+
+  where
+
+  annihilate :: a -> Boolean
+  annihilate a = zero == a * zero
+              && zero == zero * a
+
+  distributive :: a -> a -> a -> Boolean
+  distributive a b c = a * (b + c) == a * b + a * c
+
 
 -- |
 -- Applicative
@@ -31,7 +138,7 @@ checkApplicative ta tb tc = do
   quickCheck $ interchange ta tb
 
   where
-  
+
   identity :: forall f a. (Applicative f, Arbitrary (f a), Eq (f a)) => f a -> f a -> Boolean
   identity _ v = (pure id <*> v) == v
 
@@ -53,9 +160,9 @@ checkMonad t = do
   quickCheck $ leftIdentity t
   quickCheck $ rightIdentity t
   quickCheck $ associativity t
-  
+
   where
-  
+
   leftIdentity :: forall m a. (Monad m, Arbitrary a, Eq (m a)) => m a -> a -> (a -> m a) -> Boolean
   leftIdentity _ x f = (return x >>= f) == (f x)
 
@@ -64,4 +171,3 @@ checkMonad t = do
 
   associativity :: forall m a. (Monad m, Arbitrary a, Eq (m a)) => m a -> m a -> (a -> m a) -> (a -> m a) -> Boolean
   associativity _ m f g = ((m >>= f) >>= g) == (m >>= (\x -> f x >>= g))
-

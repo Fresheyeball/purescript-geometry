@@ -11,7 +11,7 @@
     "output"
   ],
   "devDependencies": {
-    "purescript-quickcheck": "~0.5.2",
+    "purescript-quickcheck": "*",
     "purescript-test-unit": "~1.1.5",
     "purescript-transformers": "~0.5.4"
   },

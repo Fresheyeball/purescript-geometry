@@ -2,17 +2,20 @@ module Data.Geometry.Point.Test where
 
 import Control.Comonad
 
+import Control.Biapplicative(bipure)
 import Test.QuickCheck
 import Test.Classes
 import Debug.Trace
-
 import Data.Geometry.Axis.Test
 import Data.Geometry.Point
 import Data.Geometry.Axis
 import Math
 
-instance arbPoint :: (Arbitrary x, Arbitrary y) => Arbitrary (Point x y) where
+instance arbPoint :: (Arbitrary a, Semiring a) => Arbitrary (Point a a) where
   arbitrary = Point <$> arbitrary <*> arbitrary
+
+instance coarbPoint :: (CoArbitrary a, Semiring a) => CoArbitrary (Point a a) where
+  coarbitrary (Point (X x) (Y y)) = coarbitrary $ x + y
 
 assert :: forall p. (Testable p) => p -> QC Unit
 assert f = quickCheck' 1 f
@@ -37,3 +40,10 @@ initt = do
     checkPointEq :: X Number -> Y Number -> Boolean
     checkPointEq x y = Point x y == Point x y && Point x y /= Point x (y + (Y one))
   quickCheck checkPointEq
+
+  trace "Bifunctor"
+  let p = bipure 0 0 :: Point Number Number
+  checkBifunctor p
+
+  trace "semiring"
+  checkSemiring p
