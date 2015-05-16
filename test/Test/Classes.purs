@@ -12,13 +12,15 @@ import Debug.Trace
 
 -- infix 4 =~=
 
--- Approximate equality to overcome precision issues
-(=~=) :: Number -> Number -> Boolean
-(=~=) x y = (y - x) <= epsilon && (y - x) >= (-epsilon)
-  where
-  epsilon = 0.00000001
 
-checkFunctor :: forall f a. (Functor f, Arbitrary a, CoArbitrary a, Arbitrary (f a), Eq (f a)) => f a -> QC Unit
+
+checkFunctor :: forall f a.
+  ( Functor f
+  , Arbitrary a
+  , CoArbitrary a
+  , Arbitrary (f a)
+  , Eq (f a)) => f a
+  -> QC Unit
 checkFunctor t = do
   trace "Functor identity"
   quickCheck $ identity t
@@ -27,11 +29,11 @@ checkFunctor t = do
 
   where
 
-  identity :: f a -> f a -> Boolean
-  identity _ f = id <$> f == id f
+  identity :: f a -> Boolean
+  identity f = id <$> f == id f
 
-  associativity :: f a -> f a -> (a -> a) -> (a -> a) -> Boolean
-  associativity _ f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
+  associativity :: f a -> (a -> a) -> (a -> a) -> Boolean
+  associativity f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
 
 
 checkBifunctor :: forall f a b.

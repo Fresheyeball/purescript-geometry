@@ -3,6 +3,7 @@ module Data.Geometry.Point.Test where
 import Control.Comonad
 
 import Control.Biapplicative(bipure)
+import Test.Fuzzy
 import Test.QuickCheck
 import Test.Classes
 import Test.Magma
@@ -47,4 +48,4 @@ initt = do
   checkBifunctor p
 
   trace "Semiring"
-  checkSemiring p
+  checkSemiring' \(Point (X x) (Y y)) (Point (X x') (Y y')) -> x =~= x' && y =~= y'
