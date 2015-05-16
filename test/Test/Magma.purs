@@ -47,7 +47,7 @@ checkMonoid' (==) (*) identity' = do
   trace "Monoid identity"
   quickCheck identity
   trace "Semigroup <= Monoid"
-  --checkSemigroup f
+  checkSemigroup' (==) (*)
 
   where
 
