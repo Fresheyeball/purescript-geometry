@@ -76,11 +76,10 @@ checkCommutativeMonoid = checkCommutativeMonoid' (==)
 
 checkSemiring' :: forall a.
   ( Show a
-  , Semiring a
   , Arbitrary a
   , CoArbitrary a )
-  => CustomEq a -> QC Unit
-checkSemiring' (==) = do
+  => CustomEq a -> Binary a -> a -> Binary a -> a -> QC Unit
+checkSemiring' (==) (+) zero (*) one = do
   trace "Semiring <= CommutativeMonoid + 0"
   checkCommutativeMonoid' (==) (+) (zero :: a)
   trace "Semiring <= Monoid * 1"
@@ -95,20 +94,35 @@ checkSemiring' (==) = do
   annihilate :: a -> Result
   annihilate a = (zero == (a * zero))
               && (zero == (zero * a))
-   <?> "It totally didn't annihilate, when"
-   <> "\n a = " <> show a
-   <> "\n zero = " <> show (zero :: a)
-   <> "\n so..."
-   <> "\n a * zero = " <> show (a * zero)
-   <> "\n but like"
-   <> "\n zero * a = " <> show (zero * a)
+    <?> "It totally didn't annihilate, when"
+    <> "\n a = " <> show a
+    <> "\n zero = " <> show (zero :: a)
+    <> "\n so..."
+    <> "\n a * zero = " <> show (a * zero)
+    <> "\n but like"
+    <> "\n zero * a = " <> show (zero * a)
 
 checkSemiring :: forall a.
+  ( Arbitrary a
+  , CoArbitrary a
+  , Show a
+  , Eq a )
+  => Binary a -> a -> Binary a -> a -> QC Unit
+checkSemiring = checkSemiring' ((==) :: CustomEq a)
+
+checkSemiringInstance' :: forall a.
+  ( Semiring a
+  , Arbitrary a
+  , CoArbitrary a
+  , Show a )
+  => CustomEq a -> QC Unit
+checkSemiringInstance' (==) = checkSemiring' (==) (+) zero (*) one
+
+checkSemiringInstance :: forall a.
   ( Semiring a
   , Arbitrary a
   , CoArbitrary a
   , Show a
   , Eq a )
-  => a -- wildcard value for type lookup
-  -> QC Unit
-checkSemiring _ = checkSemiring' ((==) :: (a -> a -> Boolean))
+  => a -> QC Unit
+checkSemiringInstance _ = checkSemiringInstance' ((==) :: CustomEq a)

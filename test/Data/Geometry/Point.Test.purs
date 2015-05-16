@@ -49,4 +49,4 @@ initt = do
   checkBifunctor p
 
   trace "Semiring"
-  checkSemiring' \(Point (X x) (Y y)) (Point (X x') (Y y')) -> x =~= x' && y =~= y'
+  checkSemiringInstance' \(Point (X x) (Y y)) (Point (X x') (Y y')) -> x =~= x' && y =~= y'
