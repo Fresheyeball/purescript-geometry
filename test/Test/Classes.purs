@@ -1,7 +1,7 @@
 module Test.Classes where
 
 import Data.Bifunctor
-import Test.QuickCheck (QC(..), Arbitrary, CoArbitrary, quickCheck)
+import Test.QuickCheck
 import Debug.Trace
 
 -- |
@@ -29,6 +29,7 @@ checkBifunctor :: forall f a b.
   , Arbitrary a, CoArbitrary a
   , Arbitrary b, CoArbitrary b
   , Arbitrary (f a b)
+  , Show a
   , Eq        (f a b)) => f a b -> QC Unit
 checkBifunctor t = do
   trace "Bifunctor identity"
@@ -42,6 +43,7 @@ checkBifunctor t = do
     ( Bifunctor f
     , Arbitrary a
     , Arbitrary b
+    , Show a
     , Eq (f a b)) => f a b -> f a b -> Boolean
   identity _ f = bimap id id f == id f
 
@@ -49,6 +51,7 @@ checkBifunctor t = do
     ( Bifunctor f
     , Arbitrary a
     , Arbitrary b
+    , Show a
     , Eq (f a b))
     => f a b
     -> f a b
@@ -61,7 +64,9 @@ checkBifunctor t = do
 
 checkSemigroup :: forall a.
   ( Eq a
-  , Arbitrary a, CoArbitrary a )
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
   => a -> QC Unit
 checkSemigroup _ = do
   trace "Semigroup associativity"
@@ -69,13 +74,20 @@ checkSemigroup _ = do
 
   where
 
-  associativity :: a -> a -> a -> (a -> a -> a) -> Boolean
+  associativity :: a -> a -> a -> (a -> a -> a) -> Result
   associativity a b c f = (a `f` b) `f` c == a `f` (b `f` c)
-
+    <?> "its not associative bro, where"
+    <>  "\n a = " <> show a
+    <>  "\n b = " <> show b
+    <>  "\n c = " <> show c
+    <>  "\n (a * b) * c  = " <> show ((a `f` b) `f` c)
+    <>  "\n  a * (b * c) = " <> show (a `f` (b `f` c))
 
 checkMonoid :: forall a.
   ( Eq a
-  , Arbitrary a, CoArbitrary a )
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
   => (a -> a -> a) -> a -> QC Unit
 checkMonoid f identity' = do
   trace "Monoid identity"
@@ -85,13 +97,20 @@ checkMonoid f identity' = do
 
   where
 
-  identity :: a -> Boolean
+  identity :: a -> Result
   identity a = a == a         `f` identity'
             && a == identity' `f` a
+    <?> "Identity, it totally didn't hold, where"
+    <> "\n a = " <> show a
+    <> "\n identity = " <> show identity'
+    <> "\n a * identity = " <> show (a `f` identity')
+    <> "\n identity * a = " <> show (identity' `f` a)
 
 checkCommutative :: forall a.
   ( Eq a
-  , Arbitrary a, CoArbitrary a )
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
   => (a -> a -> a) -> QC Unit
 checkCommutative f = do
   trace "Commutative"
@@ -104,7 +123,9 @@ checkCommutative f = do
 
 checkCommutativeMonoid :: forall a.
   ( Eq a
-  , Arbitrary a, CoArbitrary a )
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
   => (a -> a -> a) -> a -> QC Unit
 checkCommutativeMonoid f identity = do
   trace "CommutativeMonoid <= Monoid"
@@ -116,6 +137,7 @@ checkSemiring :: forall a.
   ( Semiring a
   , Arbitrary a
   , CoArbitrary a
+  , Show a
   , Eq a )
   => a -> QC Unit
 checkSemiring _ = do
