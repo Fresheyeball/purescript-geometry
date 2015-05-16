@@ -1,7 +1,5 @@
 module Test.Fuzzy where
 
-import Test.QuickCheck
-
 infix 4 =~=
 
 -- Approximate equality to overcome precision issues

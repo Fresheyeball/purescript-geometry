@@ -5,8 +5,9 @@ import Control.Comonad
 import Control.Biapplicative(bipure)
 import Test.Fuzzy
 import Test.QuickCheck
-import Test.Classes
+import Test.Monad
 import Test.Magma
+import Test.Bifunctor
 import Debug.Trace
 import Data.Geometry.Axis.Test
 import Data.Geometry.Point
