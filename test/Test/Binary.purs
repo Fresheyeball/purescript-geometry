@@ -24,10 +24,10 @@ commutative :: forall a.
   => Binary a -> a -> a -> Result
 commutative = commutative' (==)
 
-associativity' :: forall a.
+associative' :: forall a.
   ( Show a )
   => CustomEq a -> Binary a -> a -> a -> a -> Result
-associativity' (==) (*) a b c = (((a * b) * c) == (a * (b * c)))
+associative' (==) (*) a b c = (((a * b) * c) == (a * (b * c)))
   <?> "its not associative bro, when"
   <>  "\n a = " <> show a
   <>  "\n b = " <> show b
@@ -36,8 +36,32 @@ associativity' (==) (*) a b c = (((a * b) * c) == (a * (b * c)))
   <>  "\n (a * b) * c  = " <> show ( (a * b) * c  )
   <>  "\n  a * (b * c) = " <> show (  a * (b * c) )
 
-associativity :: forall a.
+associative :: forall a.
   ( Show a
   , Eq a )
   => Binary a -> a -> a -> a -> Result
-associativity = associativity' (==)
+associative = associative' (==)
+
+distributive' :: forall a.
+  ( Show a )
+  => CustomEq a -> Binary a -> Binary a -> a -> a -> a -> Result
+distributive' (==) (*) (+) a b c = ( ( a * (b + c)) == ((a * b) + (a * c)) )
+                                && ( ((a + b) * c ) == ((a * c) + (b * c)) )
+  <?> "Dude, multiplication just won't distribute over addition, when"
+  <> "\n a = " <> show a
+  <> "\n b = " <> show b
+  <> "\n c = " <> show c
+  <> "\n so..."
+  <> "\n  a * (b + c) = " <> show (a * (b + c))
+  <> "\n but like"
+  <> "\n (a * b) + (a * c) = " <> show ((a * b) + (a * c))
+  <> "\n and so..."
+  <> "\n (a + b) * c = " <> show ((a + b) * c)
+  <> "\n but like"
+  <> "\n (a * c) + (b * c) = " <> show ((a * c) + (b * c))
+
+distributive :: forall a.
+  ( Show a
+  , Eq a )
+  => Binary a -> Binary a -> a -> a -> a -> Result
+distributive = distributive' (==)
