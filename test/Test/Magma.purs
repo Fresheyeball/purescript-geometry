@@ -13,7 +13,7 @@ checkSemigroup' :: forall a.
   => CustomEq a -> Binary a -> QC Unit
 checkSemigroup' (==) (*) = do
   trace "Semigroup associativity"
-  quickCheck $ associativity' (==) (*)
+  quickCheck $ associative' (==) (*)
 
 checkSemigroup :: forall a.
   ( Eq a
@@ -88,13 +88,13 @@ checkSemiring' (==) = do
   trace "Semiring annihilate"
   quickCheck annihilate
   trace "Semiring distributive"
-  quickCheck distributive
+  quickCheck $ distributive' (==) (*) ((+) :: a -> a -> a)
 
   where
 
   annihilate :: a -> Result
   annihilate a = (zero == (a * zero))
-             && (zero == (zero * a))
+              && (zero == (zero * a))
    <?> "It totally didn't annihilate, when"
    <> "\n a = " <> show a
    <> "\n zero = " <> show (zero :: a)
@@ -102,22 +102,6 @@ checkSemiring' (==) = do
    <> "\n a * zero = " <> show (a * zero)
    <> "\n but like"
    <> "\n zero * a = " <> show (zero * a)
-
-  distributive :: a -> a -> a -> Result
-  distributive a b c = ( ( a * (b + c)) == ((a * b) + (a * c)) )
-                    && ( ((a + b) * c ) == ((a * c) + (b * c)) )
-    <?> "Dude, multiplication just won't distribute over addition, when"
-    <> "\n a = " <> show a
-    <> "\n b = " <> show b
-    <> "\n c = " <> show c
-    <> "\n so..."
-    <> "\n  a * (b + c) = " <> show (a * (b + c))
-    <> "\n but like"
-    <> "\n (a * b) + (a * c) = " <> show ((a * b) + (a * c))
-    <> "\n and so..."
-    <> "\n (a + b) * c = " <> show ((a + b) * c)
-    <> "\n but like"
-    <> "\n (a * c) + (b * c) = " <> show ((a * c) + (b * c))
 
 checkSemiring :: forall a.
   ( Semiring a
