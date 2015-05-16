@@ -100,7 +100,7 @@ checkSemiring' :: forall a.
   , Arbitrary a
   , CoArbitrary a )
   => (a -> a -> Boolean) -- custom equality
-  -> a -- type wildcard
+  -> a -- wildcard value for type lookup
   -> QC Unit
 checkSemiring' (==) _ = do
   trace "Semiring <= CommutativeMonoid + 0"
@@ -127,5 +127,6 @@ checkSemiring :: forall a.
   , CoArbitrary a
   , Show a
   , Eq a )
-  => a -> QC Unit
+  => a -- wildcard value for type lookup
+  -> QC Unit
 checkSemiring = checkSemiring' (==)

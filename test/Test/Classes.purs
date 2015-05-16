@@ -1,6 +1,6 @@
 module Test.Classes where
 
-import Test.Magma
+import Test.Binary
 
 import Data.Bifunctor
 import Test.QuickCheck
