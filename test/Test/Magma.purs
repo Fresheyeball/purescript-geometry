@@ -4,46 +4,30 @@ import Debug.Trace
 import Test.QuickCheck
 import Test.Binary
 
+type Id a = a
+
 checkSemigroup' :: forall a.
   ( Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> Boolean) -- custom equality
-  -> (a -> a -> a) -- binary operator in question
-  -> QC Unit
+  => CustomEq a -> Binary a -> QC Unit
 checkSemigroup' (==) (*) = do
   trace "Semigroup associativity"
-  quickCheck associativity
-
-  where
-
-  associativity ::  a -> a -> a -> Result
-  associativity a b c = ((a * b) * c) == (a * (b * c))
-    <?> "its not associative bro, when"
-    <>  "\n a = " <> show a
-    <>  "\n b = " <> show b
-    <>  "\n c = " <> show c
-    <>  "\n so..."
-    <>  "\n (a * b) * c  = " <> show ( (a * b) * c  )
-    <>  "\n  a * (b * c) = " <> show (  a * (b * c) )
+  quickCheck $ associativity' (==) (*)
 
 checkSemigroup :: forall a.
   ( Eq a
   , Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> a) -- binary operator in question
-  -> QC Unit
+  => Binary a -> QC Unit
 checkSemigroup = checkSemigroup' (==)
 
 checkMonoid' :: forall a.
   ( Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> Boolean) -- custom equality
-  -> (a -> a -> a) -- binary operator in question
-  -> a -- identity value
-  -> QC Unit
+  => CustomEq a -> Binary a -> Id a -> QC Unit
 checkMonoid' (==) (*) identity' = do
   trace "Monoid identity"
   quickCheck identity
@@ -60,6 +44,7 @@ checkMonoid' (==) (*) identity' = do
     <> "\n identity = " <> show identity'
     <> "\n so..."
     <> "\n a * identity = " <> show (a * identity')
+    <> "\n but like"
     <> "\n identity * a = " <> show (identity' * a)
 
 checkMonoid :: forall a.
@@ -67,33 +52,26 @@ checkMonoid :: forall a.
   , Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> a) -- binary operator in question
-  -> a -- identity value
-  -> QC Unit
+  => Binary a -> Id a -> QC Unit
 checkMonoid = checkMonoid' (==)
 
 checkCommutativeMonoid' :: forall a.
   ( Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> Boolean) -- custom equality
-  -> (a -> a -> a) -- binary operator in question
-  -> a -- identity value
-  -> QC Unit
+  => CustomEq a -> Binary a -> Id a -> QC Unit
 checkCommutativeMonoid' (==) (+) identity = do
   trace "CommutativeMonoid <= Monoid"
   checkMonoid' (==) (+) identity
   trace "CommutativeMonoid <= Commutative"
-  checkCommutative' (==) (+)
+  quickCheck $ commutative' (==) (+)
 
 checkCommutativeMonoid :: forall a.
   ( Eq a
   , Show a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> a) -- binary operator in question
-  -> a -- identity value
-  -> QC Unit
+  => Binary a -> Id a -> QC Unit
 checkCommutativeMonoid = checkCommutativeMonoid' (==)
 
 checkSemiring' :: forall a.
@@ -101,8 +79,7 @@ checkSemiring' :: forall a.
   , Semiring a
   , Arbitrary a
   , CoArbitrary a )
-  => (a -> a -> Boolean) -- custom equality
-  -> QC Unit
+  => CustomEq a -> QC Unit
 checkSemiring' (==) = do
   trace "Semiring <= CommutativeMonoid + 0"
   checkCommutativeMonoid' (==) (+) (zero :: a)
@@ -117,13 +94,14 @@ checkSemiring' (==) = do
 
   annihilate :: a -> Result
   annihilate a = (zero == (a * zero))
-              && (zero == (zero * a))
-    <?> "It totally didn't annihilate, when"
-    <> "\n a = " <> show a
-    <> "\n zero = " <> show (zero :: a)
-    <> "\n so..."
-    <> "\n a * zero = " <> show (a * zero)
-    <> "\n zero * a = " <> show (zero * a)
+             && (zero == (zero * a))
+   <?> "It totally didn't annihilate, when"
+   <> "\n a = " <> show a
+   <> "\n zero = " <> show (zero :: a)
+   <> "\n so..."
+   <> "\n a * zero = " <> show (a * zero)
+   <> "\n but like"
+   <> "\n zero * a = " <> show (zero * a)
 
   distributive :: a -> a -> a -> Result
   distributive a b c = ( ( a * (b + c)) == ((a * b) + (a * c)) )
@@ -134,9 +112,11 @@ checkSemiring' (==) = do
     <> "\n c = " <> show c
     <> "\n so..."
     <> "\n  a * (b + c) = " <> show (a * (b + c))
+    <> "\n but like"
     <> "\n (a * b) + (a * c) = " <> show ((a * b) + (a * c))
-    <> "\n and like"
+    <> "\n and so..."
     <> "\n (a + b) * c = " <> show ((a + b) * c)
+    <> "\n but like"
     <> "\n (a * c) + (b * c) = " <> show ((a * c) + (b * c))
 
 checkSemiring :: forall a.
