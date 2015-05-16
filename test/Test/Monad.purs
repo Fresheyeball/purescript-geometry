@@ -64,23 +64,23 @@ checkApplicative :: forall f a b c.
   => f a -> f b -> f c -> QC Unit
 checkApplicative ta tb tc = do
   quickCheck identity
-  quickCheck $ composition ta tb tc
-  quickCheck $ homomorphism ta tb
-  quickCheck $ interchange ta tb
+  quickCheck composition
+  quickCheck homomorphism
+  quickCheck interchange
 
   where
 
   identity :: f a -> Boolean
   identity v = (pure id <*> v) == v
 
-  composition ::  f a -> f b -> f c -> f (b -> c) -> f (a -> b) -> f a -> Boolean
-  composition _ _ _ u v w = (pure (<<<) <*> u <*> v <*> w) == (u <*> (v <*> w))
+  composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
+  composition u v w = (pure (<<<) <*> u <*> v <*> w) == (u <*> (v <*> w))
 
-  homomorphism :: f a -> f b -> (a -> b) -> a -> Boolean
-  homomorphism _ tb f x = (pure f <*> pure x) == (pure (f x) `asTypeOf` tb)
+  homomorphism :: (a -> b) -> a -> Boolean
+  homomorphism f x = (pure f <*> pure x) == (pure (f x) `asTypeOf` tb)
 
-  interchange :: f a -> f b -> a -> f (a -> b) -> Boolean
-  interchange _ _ y u = (u <*> pure y) == (pure (\x -> x y) <*> u)
+  interchange :: a -> f (a -> b) -> Boolean
+  interchange y u = (u <*> pure y) == (pure (\x -> x y) <*> u)
 
 --
 -- checkMonad :: forall m a.
