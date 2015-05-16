@@ -19,7 +19,7 @@ class Points a x y where points :: a -> [Point x y]
 class Origin a x y where origin :: a ->  Point x y
 
 instance semiringPoint :: (Semiring x, Semiring y) => Semiring (Point x y) where
-  (+) (Point x y) (Point x' y') = Point (x + x') (y + y')
+  (+) = bilift2 (+) (+)
   zero = Point zero zero
   (*) = bilift2 (*) (*)
   one = Point one one

@@ -57,7 +57,7 @@ distributive' (==) (*) (+) a b c = ( ( a * (b + c)) == ((a * b) + (a * c)) )
   <> "\n (a * b) + (a * c) = " <> show ((a * b) + (a * c))
   <> "\n and so..."
   <> "\n (a + b) * c = " <> show ((a + b) * c)
-  <> "\n but like"
+  <> "\n but then like,"
   <> "\n (a * c) + (b * c) = " <> show ((a * c) + (b * c))
 
 distributive :: forall a.
