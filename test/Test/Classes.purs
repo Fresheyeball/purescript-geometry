@@ -8,6 +8,14 @@ import Debug.Trace
 -- Functor
 --
 
+-- infix 4 =~=
+
+-- Approximate equality to overcome precision issues
+(=~=) :: Number -> Number -> Boolean
+(=~=) x y = (y - x) <= epsilon && (y - x) >= (-epsilon)
+  where
+  epsilon = 0.00000001
+
 checkFunctor :: forall f a. (Functor f, Arbitrary a, CoArbitrary a, Arbitrary (f a), Eq (f a)) => f a -> QC Unit
 checkFunctor t = do
   trace "Functor identity"
@@ -62,26 +70,33 @@ checkBifunctor t = do
     -> Boolean
   composition _ f f1 f2 g1 g2 = (bimap f1 g1 <<< bimap f2 g2) f == (bimap (f1 <<< f2) (g1 <<< g2)) f
 
-checkSemigroup :: forall a.
-  ( Eq a
-  , Show a
+checkSemigroup' :: forall a.
+  ( Show a
   , Arbitrary a
   , CoArbitrary a )
-  => a -> QC Unit
-checkSemigroup _ = do
+  => (a -> a -> Boolean) -> (a -> a -> a) -> QC Unit
+checkSemigroup' eq f = do
   trace "Semigroup associativity"
   quickCheck associativity
 
   where
 
-  associativity :: a -> a -> a -> (a -> a -> a) -> Result
-  associativity a b c f = (a `f` b) `f` c == a `f` (b `f` c)
+  associativity ::  a -> a -> a -> Result
+  associativity a b c = ((a `f` b) `f` c) `eq` (a `f` (b `f` c))
     <?> "its not associative bro, where"
     <>  "\n a = " <> show a
     <>  "\n b = " <> show b
     <>  "\n c = " <> show c
-    <>  "\n (a * b) * c  = " <> show ((a `f` b) `f` c)
-    <>  "\n  a * (b * c) = " <> show (a `f` (b `f` c))
+    <>  "\n (a * b) * c  = " <> show ( (a `f` b) `f` c  )
+    <>  "\n  a * (b * c) = " <> show (  a `f` (b `f` c) )
+
+checkSemigroup :: forall a.
+  ( Eq a
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
+  => (a -> a -> a) -> QC Unit
+checkSemigroup = checkSemigroup' (==)
 
 checkMonoid :: forall a.
   ( Eq a
@@ -92,8 +107,8 @@ checkMonoid :: forall a.
 checkMonoid f identity' = do
   trace "Monoid identity"
   quickCheck identity
-  trace "Monoid <= Semigroup"
-  checkSemigroup identity'
+  trace "Semigroup <= Monoid"
+  --checkSemigroup f
 
   where
 

@@ -23,7 +23,7 @@ assert f = quickCheck' 1 f
 initt = do
   trace "Point"
 
-  trace "distance"
+  trace "Distance"
   quickCheck $ \x y x' y' ->
     let
       xyPlus x y = foldXY (+) x y zero
@@ -31,11 +31,11 @@ initt = do
       sq x = x * x
     in distance (Point x y) (Point x' y') == sqrt (sq (x' - x) `xyPlus` sq (y' - y))
 
-  trace "show"
+  trace "Show"
   let l =               Point (X 1) (Y 2)
   assert $ (show l) == "Point (X 1) (Y 2)"
 
-  trace "eq"
+  trace "Eq"
   let
     checkPointEq :: X Number -> Y Number -> Boolean
     checkPointEq x y = Point x y == Point x y && Point x y /= Point x (y + (Y one))
@@ -45,5 +45,5 @@ initt = do
   let p = bipure 0 0 :: Point Number Number
   checkBifunctor p
 
-  trace "semiring"
+  trace "Semiring"
   checkSemiring p
