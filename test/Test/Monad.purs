@@ -356,31 +356,76 @@ checkMonad :: forall m a b c.
   , Arbitrary (a -> m a)
   , Arbitrary (a -> m b)
   , Arbitrary (b -> m c)
-  , Arbitrary a
-  , Show (m a), Show (m c) )
-  => CustomEq (m a)
-  -> CustomEq (m b)
-  -> CustomEq (m c)
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m c)
+  , Show a, Show (m a), Show (m b), Show (m c) )
+  => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c)
   -> Bind m a a
   -> Bind m a b
   -> Bind m a c
   -> Bind m b c
   -> Pure m a
+
+  -> Fmap m c c
+
+  -- identity
+  -> Ap m a a
+  -> Pure m (a -> a)
+
+  -- Composition
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
+
+  -- Apply
+  -> Fmap m (b -> c) ((a -> b) -> a -> c)
+  -> Ap m a c
+  -> Ap m (a -> b) (a -> c)
+  -> Ap m a b
+  -> Ap m b c
+
+  -- homomorphism
+  -> Pure m b
+  -> Pure m a
+  -> Ap m a b
+  -> Pure m (a -> b)
+
+  -- interchange
+  -> Ap m (a -> b) b
+  -> Pure m ((a -> b) -> b)
+
   -> QC Unit
-checkMonad (==) (===) (====) bindaa bindab bindac bindbc return = do
+checkMonad
+  (==) (===) (====) bindaa bindab bindac bindbc return
+  (<$>) idAPv pureId
+  pureleftAPu pureleft
+  leftFMAPu vAPw uAPv _vAPw_ uAP_v
+  pureb purea fAPpurea pureAB
+  y_APu pure_X = do
 
   trace "Monad <= Applicative"
-  -- checkApplicative' (==)
+  checkApplicative'
+    (==) (===) (====) (<$>) idAPv pureId
+    pureleftAPu pureleft
+    leftFMAPu vAPw uAPv _vAPw_ uAP_v
+    pureb purea fAPpurea pureAB
+    y_APu pure_X
+
   trace "Monad <= Bind"
   checkBind' (====) bindab bindbc bindac
 
-  quickCheck leftIdentity
+  -- quickCheck leftIdentity
   quickCheck rightIdentity
 
   where
 
-  leftIdentity :: a -> (a -> m a) -> Boolean
-  leftIdentity x f = (return x `bindaa` f) == (f x)
+  -- leftIdentity :: a -> (a -> m a) -> Result
+  -- leftIdentity x f = (return x `bindaa` f) == (f x)
+  --   <?> "woah"
 
-  rightIdentity :: m a -> Boolean
+  rightIdentity :: m a -> Result
   rightIdentity m = (m `bindaa` return) == m
+    <?> "woah"
