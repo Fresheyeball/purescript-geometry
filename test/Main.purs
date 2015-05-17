@@ -4,6 +4,7 @@ import Control.Monad.Eff
 
 main = do
   Debug.Trace.trace "Testing..."
+  Data.Geometry.Axis.Test.init
   -- Data.Geometry.Rect.Test.init
   -- Data.Geometry.Line.Test.init
   Data.Geometry.Point.Test.initt
