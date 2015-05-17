@@ -118,13 +118,24 @@ checkApplicative' (==) (===) (====)
   interchange :: a -> f (a -> b) -> Boolean
   interchange y u = (u `fAPpurea` purea y) === (pure_X (\x -> x y) `y_APu` u)
 
--- undefined :: forall a. a
--- undefined = undefined' unit
---
---   where
---
---   undefined' :: Unit -> a
---   undefined' unit = undefined' unit
+checkApplicative :: forall f a b c.
+  ( Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , CoArbitrary a
+  , Arbitrary b
+  , Arbitrary a
+  , Eq (f a), Eq (f b), Eq (f c) )
+  -- identity
+  => (f (a -> a) -> f a -> f a) -> ((a -> a) -> f (a -> a))
+  -- composition
+  -> (f (a -> c) -> f a -> f c) -> (f ((a -> b) -> a -> c) -> f (a -> b) -> f (a -> c)) -> (f ((b -> c) -> (a -> b) -> a -> c) -> f (b -> c) -> f ((a -> b) -> a -> c)) -> (((b -> c) -> (a -> b) -> a -> c) -> f ((b -> c) ->  (a -> b) -> a -> c)) -> (f (a -> b) -> f a -> f b) -> (f (b -> c) -> f b -> f c)
+  -- homomorphism
+  -> (b -> f b) -> (a -> f a) -> (f (a -> b) -> f a -> f b) -> ((a -> b) -> f (a -> b))
+  -- interchange
+  -> (f ((a -> b) -> b) -> f (a -> b) -> f b) -> (((a -> b) -> b) -> f ((a -> b) -> b))
+  -> QC Unit
+checkApplicative = checkApplicative' (==) (==) (==)
 
 -- checkApplicativeInstance :: forall f a b c.
 --   ( Applicative f
