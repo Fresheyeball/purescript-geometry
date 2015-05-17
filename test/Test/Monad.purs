@@ -28,12 +28,19 @@ checkFunctor' (==) (<$>) = do
   identity f = id <$> f == id f
     <?> "oh no bro! functor identity isn't cool when"
     <> "\n f a = " <> show f
-    <> "so..."
-    <> "id <$> f = " <> show (id <$> f)
-    <> "id f = " <> show (id f)
+    <> "\n so..."
+    <> "\n id <$> f = " <> show (id <$> f)
+    <> "\n except that"
+    <> "\n id f = " <> show (id f)
 
-  associativity :: f a -> (a -> a) -> (a -> a) -> Boolean
+  associativity :: f a -> (a -> a) -> (a -> a) -> Result
   associativity f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
+    <?> "no way, functor associativity won't work when"
+    <> "\n f = " <> show f
+    <> "\n cuz like"
+    <> "\n (p <<< q) <$> f = " <> show ((p <<< q) <$> f)
+    <> "\n but then"
+    <> "\n ((<$>) p <<< (<$>) q) f = " <> show (((<$>) p <<< (<$>) q) f)
 
 checkFunctor :: forall f a.
   ( Arbitrary a
