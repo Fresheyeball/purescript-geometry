@@ -370,9 +370,39 @@ checkMonad' :: forall m a b c.
   -> Bind m c c
   -> Pure m a
   -> Pure m c
+  -- applicative
+  -> Fmap m c c
+  -> Ap m a a
+  -> Pure m (a -> a)
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
+  -> Fmap m (b -> c) ((a -> b) -> a -> c)
+  -> Ap m a c
+  -> Ap m (a -> b) (a -> c)
+  -> Ap m a b
+  -> Ap m b c
+  -> Pure m b
+  -> Pure m a
+  -> Ap m a b
+  -> Pure m (a -> b)
+  -> Ap m (a -> b) b
+  -> Pure m ((a -> b) -> b)
   -> QC Unit
 checkMonad'
-  (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc = do
+  (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc
+  (<$>) idAPv pureId
+  pureleftAPu pureleft
+  leftFMAPu vAPw uAPv _vAPw_ uAP_v
+  pureb purea fAPpurea pureAB
+  y_APu pure_X = do
+
+  trace "Monad <= Applicative"
+  checkApplicative'
+    (==) (===) (====) (<$>) idAPv pureId
+    pureleftAPu pureleft
+    leftFMAPu vAPw uAPv _vAPw_ uAP_v
+    pureb purea fAPpurea pureAB
+    y_APu pure_X
 
   trace "Monad <= Bind"
   checkBind' (====) bindab bindbc bindac
@@ -398,20 +428,42 @@ checkMonad'
     <> "\n but like"
     <> "\n m >>= return = " <> show (m `bindaa` returna)
 
-checkMonadInstance' :: forall m a b c.
-  ( Monad m
-  , Arbitrary (m a)
-  , Arbitrary (a -> m a)
-  , Arbitrary (a -> m b)
-  , Arbitrary (b -> m c)
-  , Arbitrary (m (a -> b))
-  , Arbitrary (m (b -> c))
-  , Arbitrary a, CoArbitrary a
-  , Arbitrary b
-  , Arbitrary c, CoArbitrary c
-  , Arbitrary (m c)
-  , Show a, Show c, Show (m a), Show (m b), Show (m c) )
-  => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
-checkMonadInstance' (==) (===) (====) = checkMonad'
-  (==) (===) (====)
-  (>>=) (>>=) (>>=) (>>=) (>>=) pure pure
+-- checkMonadInstance' :: forall m a b c.
+--   ( Monad m
+--   , Arbitrary (m a)
+--   , Arbitrary (a -> m a)
+--   , Arbitrary (a -> m b)
+--   , Arbitrary (b -> m c)
+--   , Arbitrary (m (a -> b))
+--   , Arbitrary (m (b -> c))
+--   , Arbitrary a, CoArbitrary a
+--   , Arbitrary b
+--   , Arbitrary c, CoArbitrary c
+--   , Arbitrary (m c)
+--   , Show a, Show c, Show (m a), Show (m b), Show (m c) )
+--   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
+-- checkMonadInstance' (==) (===) (====) = checkMonad'
+--   (==) (===) (====)
+--   ((>>=) :: Bind m a a)
+--   ((>>=) :: Bind m a b)
+--   ((>>=) :: Bind m a c)
+--   ((>>=) :: Bind m b c)
+--   ((>>=) :: Bind m c c)
+--   (pure :: Pure m a)
+--   (pure :: Pure m c)
+--   ((<$>) :: Fmap m c c)
+--   ((<*>) :: Ap m a a)
+--   (pure :: Pure m (a -> a))
+--   ((<*>) :: Ap m (b -> c) ((a -> b) -> a -> c))
+--   (pure :: Pure m (Category (->) a b c))
+--   ((<$>) :: Fmap m (b -> c) ((a -> b) -> a -> c))
+--   ((<*>) :: Ap m a c)
+--   ((<*>) :: Ap m (a -> b) (a -> c))
+--   ((<*>) :: Ap m a b)
+--   ((<*>) :: Ap m b c)
+--   (pure :: Pure m b)
+--   (pure :: Pure m a)
+--   ((<*>) :: Ap m a b)
+--   (pure :: Pure m (a -> b))
+--   ((<*>) :: Ap m (a -> b) b)
+--   (pure :: Pure m ((a -> b) -> b))
