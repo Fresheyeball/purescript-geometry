@@ -70,6 +70,58 @@ checkFunctorInstance :: forall f a.
   => f a -> QC Unit
 checkFunctorInstance _ = checkFunctorInstance' ((==) :: CustomEq (f a))
 
+checkApply' :: forall f a b c.
+  ( Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , Show (f a) )
+  => CustomEq (f c)
+  -> Ap f a c
+  -> Ap f (a -> b) (a -> c)
+  -> Ap f (b -> c) ((a -> b) -> a -> c)
+  -> Pure f (Category (->) a b c)
+  -> Ap f a b
+  -> Ap f b c
+  -> QC Unit
+checkApply' (==) vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v = do
+
+  quickCheck composition
+
+  where
+
+  composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
+  composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) == (u `uAP_v` (v `_vAPw_` w))
+
+checkApply :: forall f a b c.
+  ( Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , Show (f a)
+  , Eq (f c) )
+  => Ap f a c
+  -> Ap f (a -> b) (a -> c)
+  -> Ap f (b -> c) ((a -> b) -> a -> c)
+  -> Pure f (Category (->) a b c)
+  -> Ap f a b
+  -> Ap f b c
+  -> QC Unit
+checkApply = checkApply' (==)
+
+checkApplyInstance' :: forall f a b c.
+  ( Apply f
+  , Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , Show (f a) )
+  => CustomEq (f c) -> f a -> f b -> QC Unit
+checkApplyInstance' (==) _ _ = checkApply' (==)
+  ((<*>) :: Ap f a c)
+  ((<*>) :: Ap f (a -> b) (a -> c))
+  ((<*>) :: Ap f (b -> c) ((a -> b) -> a -> c))
+  (pure  :: Pure f (Category (->) a b c) )
+  ((<*>) :: Ap f a b)
+  ((<*>) :: Ap f b c)
+
 checkApplicative' :: forall f a b c.
   ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
@@ -170,7 +222,7 @@ checkApplicativeInstance :: forall f a b c.
   , Eq (f a), Eq (f b), Eq (f c) ) => f a -> f b -> f c -> QC Unit
 checkApplicativeInstance _ _ _ = checkApplicativeInstance'
   ((==) :: CustomEq (f a)) ((==) :: CustomEq (f b)) ((==) :: CustomEq (f c))
---
+
 -- checkMonad :: forall m a.
 --   ( Monad m
 --   , Arbitrary a
