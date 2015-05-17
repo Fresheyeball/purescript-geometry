@@ -328,13 +328,27 @@ checkBind :: forall m a b c.
 checkBind = checkBind' (==)
 
 checkBindInstance' :: forall m a b c.
-  ( Arbitrary (m a)
+  ( Bind m
+  , Arbitrary (m a)
   , Arbitrary (a -> m b)
   , Arbitrary (b -> m c)
   , Arbitrary a
   , Show (m a), Show (m c) )
   => CustomEq (m c) -> m a -> m b -> QC Unit
-checkBindInstance' (==) _ _ = checkBind' (==) (>>=) (>>=) (>>=)
+checkBindInstance' (==) _ _ = checkBind' (==)
+  ((>>=) :: Bind m a b) ((>>=) :: Bind m b c) ((>>=) :: Bind m a c)
+
+checkBindInstance :: forall m a b c.
+  ( Bind m
+  , Arbitrary (m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary a
+  , Eq (m c)
+  , Show (m a), Show (m c) )
+  => m a -> m b -> m c -> QC Unit
+checkBindInstance ma mb _ = checkBindInstance' ((==) :: CustomEq (m c)) ma mb
+
 
 -- checkMonad :: forall m a.
 --   ( Monad m
