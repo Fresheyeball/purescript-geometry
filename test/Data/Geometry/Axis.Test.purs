@@ -27,6 +27,12 @@ init = do
   trace "Applicative Y"
   checkApplicativeInstance (Y 0) (Y "") (Y false)
 
+  trace "Bind X"
+  checkBindInstance (X 0) (X "") (X false)
+
+  trace "Bind Y"
+  checkBindInstance (Y 0) (Y "") (Y false)
+
   trace "Semiring X"
   checkSemiringInstance' \(X x) (X x') -> x =~= x'
 
