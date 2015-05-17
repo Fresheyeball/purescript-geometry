@@ -30,7 +30,7 @@ checkFunctor' (==) (<$>) = do
     <> "\n f a = " <> show f
     <> "\n so..."
     <> "\n id <$> f = " <> show (id <$> f)
-    <> "\n except that"
+    <> "\n except"
     <> "\n id f = " <> show (id f)
 
   associativity :: f a -> (a -> a) -> (a -> a) -> Result
@@ -145,7 +145,7 @@ checkApplicative :: forall f a b c.
   -> Ap f (a -> b) b -> Pure f ((a -> b) -> b) -> QC Unit
 checkApplicative = checkApplicative' (==) (==) (==)
 
-checkApplicativeInstance' :: forall f a b c.
+checkApplicativeInstance' :: forall f a b c fn ap.
   ( Applicative f
   , Arbitrary (f a)
   , Arbitrary (f (a -> b))
