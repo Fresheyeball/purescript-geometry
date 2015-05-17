@@ -71,46 +71,49 @@ checkFunctorInstance :: forall f a.
 checkFunctorInstance _ = checkFunctorInstance' ((==) :: CustomEq (f a))
 
 checkApply' :: forall f a b c.
-  ( Applicative f
-  , Arbitrary (f a)
+  ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
-  , Show (f a) )
+  , Show (f a)
+  , Show (f b)
+  , Show (f c) )
   => CustomEq (f c)
+  -> Fmap f (b -> c) ((a -> b) -> a -> c)
   -> Ap f a c
   -> Ap f (a -> b) (a -> c)
-  -> Ap f (b -> c) ((a -> b) -> a -> c)
-  -> Pure f (Category (->) a b c)
   -> Ap f a b
   -> Ap f b c
   -> QC Unit
-checkApply' (==) vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v = do
+checkApply' (==) leftFMAPu vAPw uAPv _vAPw_ uAP_v =
 
   quickCheck composition
 
   where
 
-  composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
-  composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) == (u `uAP_v` (v `_vAPw_` w))
+  composition :: f (b -> c) -> f (a -> b) -> f a -> Result
+  composition u v w = ((<<<) `leftFMAPu` u `uAPv` v `vAPw` w) == (u `uAP_v` (v `_vAPw_` w))
+    <?> "Apply composition, it, did, not, hold, cuz like"
+    <> "\n f a = " <> show w
+    <> "\n and if you think about it"
+    <> "\n (<<<) <$> u <*> v <*> w = " <> show (((<<<) `leftFMAPu` u `uAPv` v `vAPw` w))
+    <> "\n but,"
+    <> "\n u <*> (v <*> w) = " <> show (u `uAP_v` (v `_vAPw_` w))
 
 checkApply :: forall f a b c.
-  ( Applicative f
-  , Arbitrary (f a)
+  ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
   , Show (f a)
+  , Show (f b)
+  , Show (f c)
   , Eq (f c) )
-  => Ap f a c
+  => Fmap f (b -> c) ((a -> b) -> a -> c)
+  -> Ap f a c
   -> Ap f (a -> b) (a -> c)
-  -> Ap f (b -> c) ((a -> b) -> a -> c)
-  -> Pure f (Category (->) a b c)
   -> Ap f a b
   -> Ap f b c
   -> QC Unit
 checkApply = checkApply' (==)
-
--- APPLY SHOULD NOT DEPEND ON APPLICATIVE, CLEAN COMPOSITION TO
--- (<<<) <$> f <*> g <*> h = f <*> (g <*> h)
 
 checkApplyInstance' :: forall f a b c.
   ( Applicative f
@@ -118,15 +121,29 @@ checkApplyInstance' :: forall f a b c.
   , Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
-  , Show (f a) )
+  , Show (f a)
+  , Show (f b)
+  , Show (f c) )
   => CustomEq (f c) -> f a -> f b -> QC Unit
 checkApplyInstance' (==) _ _ = checkApply' (==)
+  ((<$>) :: Fmap f (b -> c) ((a -> b) -> a -> c))
   ((<*>) :: Ap f a c)
   ((<*>) :: Ap f (a -> b) (a -> c))
-  ((<*>) :: Ap f (b -> c) ((a -> b) -> a -> c))
-  (pure  :: Pure f (Category (->) a b c) )
   ((<*>) :: Ap f a b)
   ((<*>) :: Ap f b c)
+
+checkApplyInstance :: forall f a b c.
+  ( Applicative f
+  , Apply f
+  , Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , Show (f a)
+  , Show (f b)
+  , Show (f c)
+  , Eq (f c) )
+  => f a -> f b -> QC Unit
+checkApplyInstance = checkApplyInstance' ((==) :: CustomEq (f c))
 
 checkApplicative' :: forall f a b c.
   ( Arbitrary (f a)
@@ -135,18 +152,19 @@ checkApplicative' :: forall f a b c.
   , CoArbitrary a
   , Arbitrary b
   , Arbitrary a
-  , Show (f a) )
+  , Show (f a)
+  , Show (f b)
+  , Show (f c) )
   => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> Fmap f a a
 
   -- identity
   -> Ap f a a
   -> Pure f (a -> a)
 
-  -- composition
+  -- Composition
+  -> Fmap f (b -> c) ((a -> b) -> a -> c)
   -> Ap f a c
   -> Ap f (a -> b) (a -> c)
-  -> Ap f (b -> c) ((a -> b) -> a -> c)
-  -> Pure f (Category (->) a b c)
   -> Ap f a b
   -> Ap f b c
 
@@ -163,13 +181,13 @@ checkApplicative' :: forall f a b c.
   -> QC Unit
 checkApplicative' (==) (===) (====) (<$>)
   idAPv pureId
-  vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v
+  leftFMAPu vAPw uAPv _vAPw_ uAP_v
   pureb purea fAPpurea pureAB
   y_APu pure_X = do
 
   checkFunctor' (==) (<$>)
+  checkApply' (====) leftFMAPu vAPw uAPv _vAPw_ uAP_v
   quickCheck identity
-  quickCheck composition
   quickCheck homomorphism
   quickCheck interchange
 
@@ -177,9 +195,6 @@ checkApplicative' (==) (===) (====) (<$>)
 
   identity :: f a -> Boolean
   identity v = (pureId id `idAPv` v) == (v :: f a)
-
-  composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
-  composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) ==== (u `uAP_v` (v `_vAPw_` w))
 
   homomorphism :: (a -> b) -> a -> Boolean
   homomorphism f x = (pureAB f `fAPpurea` purea x) === ((pureb (f x)) :: f b)
@@ -195,10 +210,12 @@ checkApplicative :: forall f a b c.
   , Arbitrary b
   , Arbitrary a
   , Show (f a)
+  , Show (f b)
+  , Show (f c)
   , Eq (f a), Eq (f b), Eq (f c) )
   => Fmap f a a
   -> Ap f a a -> Pure f (a -> a)
-  -> Ap f a c -> Ap f (a -> b) (a -> c) -> Ap f (b -> c) ((a -> b) -> a -> c) -> Pure f (Category (->) a b c) -> Ap f a b -> Ap f b c
+  -> Fmap f (b -> c) ((a -> b) -> a -> c) -> Ap f a c -> Ap f (a -> b) (a -> c) -> Ap f a b -> Ap f b c
   -> Pure f b -> Pure f a -> Ap f a b -> Pure f (a -> b)
   -> Ap f (a -> b) b -> Pure f ((a -> b) -> b) -> QC Unit
 checkApplicative = checkApplicative' (==) (==) (==)
@@ -211,10 +228,12 @@ checkApplicativeInstance' :: forall f a b c fn ap.
   , CoArbitrary a
   , Arbitrary b
   , Arbitrary a
-  , Show (f a) )
+  , Show (f a)
+  , Show (f b)
+  , Show (f c) )
   => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> QC Unit
 checkApplicativeInstance' (==) (===) (====) = checkApplicative' (==) (===) (====)
-  (<$>) (<*>) pure (<*>) (<*>) (<*>) pure (<*>) (<*>) pure pure (<*>) pure (<*>) pure
+  (<$>) (<*>) pure (<$>) (<*>) (<*>) (<*>) (<*>) pure pure (<*>) pure (<*>) pure
 
 checkApplicativeInstance :: forall f a b c.
   ( Applicative f
@@ -225,6 +244,8 @@ checkApplicativeInstance :: forall f a b c.
   , Arbitrary b
   , Arbitrary a
   , Show (f a)
+  , Show (f b)
+  , Show (f c)
   , Eq (f a), Eq (f b), Eq (f c) ) => f a -> f b -> f c -> QC Unit
 checkApplicativeInstance _ _ _ = checkApplicativeInstance'
   ((==) :: CustomEq (f a)) ((==) :: CustomEq (f b)) ((==) :: CustomEq (f c))
