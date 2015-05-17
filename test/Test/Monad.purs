@@ -302,6 +302,7 @@ checkBind' :: forall m a b c.
   -> QC Unit
 checkBind' (==) bind1 bind2 bind3 = do
 
+  trace "Bind associativity"
   quickCheck associativity
 
   where
@@ -350,23 +351,36 @@ checkBindInstance :: forall m a b c.
 checkBindInstance ma mb _ = checkBindInstance' ((==) :: CustomEq (m c)) ma mb
 
 
--- checkMonad :: forall m a.
---   ( Monad m
---   , Arbitrary a
---   , CoArbitrary a
---   , Arbitrary (m a)
---   , Eq (m a))
---   => m a -> QC Unit
--- checkMonad t = do
---   quickCheck $ leftIdentity t
---   quickCheck $ rightIdentity t
---
---   where
---
---   leftIdentity :: m a -> a -> (a -> m a) -> Boolean
---   leftIdentity _ x f = (return x >>= f) == (f x)
---
---   rightIdentity ::  m a -> m a -> Boolean
---   rightIdentity _ m = (m >>= return) == m
---
---   associativity ::  m a -> m a -> (a -> m a) -> (a -> m a) -> Boolean
+checkMonad :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (a -> m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary a
+  , Show (m a), Show (m c) )
+  => CustomEq (m a)
+  -> CustomEq (m b)
+  -> CustomEq (m c)
+  -> Bind m a a
+  -> Bind m a b
+  -> Bind m a c
+  -> Bind m b c
+  -> Pure m a
+  -> QC Unit
+checkMonad (==) (===) (====) bindaa bindab bindac bindbc return = do
+
+  trace "Monad <= Applicative"
+  -- checkApplicative' (==)
+  trace "Monad <= Bind"
+  checkBind' (====) bindab bindbc bindac
+
+  quickCheck leftIdentity
+  quickCheck rightIdentity
+
+  where
+
+  leftIdentity :: a -> (a -> m a) -> Boolean
+  leftIdentity x f = (return x `bindaa` f) == (f x)
+
+  rightIdentity :: m a -> Boolean
+  rightIdentity m = (m `bindaa` return) == m
