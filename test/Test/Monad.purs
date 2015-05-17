@@ -166,33 +166,22 @@ checkApplicative' :: forall f a b c.
   -> Ap f (a -> b) (a -> c)
   -> Ap f a b
   -> Ap f b c
-
-  -- identity
   -> Ap f a a
-  -> Pure f (a -> a)
-
-  -- Composition
   -> Ap f (b -> c) ((a -> b) -> a -> c)
+  -> Ap f a b
+  -> Ap f (a -> b) b
+  -> Pure f (a -> a)
   -> Pure f (Category (->) a b c)
-
-  -- homomorphism
   -> Pure f b
   -> Pure f a
-  -> Ap f a b
   -> Pure f (a -> b)
-
-  -- interchange
-  -> Ap f (a -> b) b
   -> Pure f ((a -> b) -> b)
 
   -> QC Unit
-checkApplicative' (==) (===) (====) (<$>)
-  leftFMAPu vAPw uAPv _vAPw_ uAP_v
-  idAPv pureId
-  pureleftAPu pureleft
-
-  pureb purea fAPpurea pureAB
-  y_APu pure_X = do
+checkApplicative' (==) (===) (====)
+  (<$>) leftFMAPu
+  vAPw uAPv _vAPw_ uAP_v idAPv fAPpurea y_APu pureleftAPu 
+  pureId pureleft pureb purea pureAB pure_X = do
 
   trace "Applicative <= Apply"
   checkApply' (====) (<$>) leftFMAPu vAPw uAPv _vAPw_ uAP_v
