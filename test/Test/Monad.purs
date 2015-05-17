@@ -4,12 +4,18 @@ import Test.Binary
 import Test.QuickCheck
 import Debug.Trace
 
+-- psc no likes Fmap'
+type Fmap  f a b =   (a -> b) -> f a -> f b
+type Ap    f a b = f (a -> b) -> f a -> f b
+type Pure  f a   = a -> f a
+type Category f a b c = (f b c) -> (f a b) -> a -> c
+
 checkFunctor' :: forall f a.
   ( Arbitrary a
   , CoArbitrary a
   , Arbitrary (f a))
   => CustomEq (f a)
-  -> ((a -> a) -> f a -> f a)
+  -> Fmap f a a
   -> QC Unit
 checkFunctor' (==) (<$>) = do
   trace "Functor identity"
@@ -30,7 +36,7 @@ checkFunctor :: forall f a.
   , CoArbitrary a
   , Arbitrary (f a)
   , Eq (f a))
-  => ((a -> a) -> f a -> f a) -> QC Unit
+  => Fmap f a a -> QC Unit
 checkFunctor = checkFunctor' (==)
 
 checkFunctorInstance' :: forall f a.
@@ -59,37 +65,32 @@ checkApplicative' :: forall f a b c.
   , Arbitrary a )
   => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c)
 
+  -> Fmap f a a
+
   -- identity
-  -> (            f (a -> a) -> f a -> f a) -- <*>
-  -> ((a -> a) -> f (a -> a)) -- pure
+  -> Ap f a a
+  -> Pure f (a -> a)
 
   -- composition
-  -> ( f  (a -> c) -> f a ->       f       c) -- v <*> w
-  -> ( f ((a -> b) ->   a ->               c)
-    -> f               (a -> b) -> f (a -> c) ) -- u <*> v
-  -> ( f ((b -> c) ->  (a -> b) ->    a -> c)
-    -> f ( b -> c)
-    -> f              ((a -> b) ->    a -> c) ) -- pure (<<<) <*> u
-  -> (   ((b -> c) ->  (a -> b) ->    a -> c)
-    -> f ((b -> c) ->  (a -> b) ->    a -> c) ) -- pure
-
-  -> (f (a ->   b)
-    -> f a -> f b) -- (v <*> w)
-  -> (f        (b ->   c)
-    ->        f b -> f c) -- u <*> (v
+  -> Ap f a c
+  -> Ap f (a -> b) (a -> c)
+  -> Ap f (b -> c) ((a -> b) -> a -> c)
+  -> Pure f (Category (->) a b c)
+  -> Ap f a b
+  -> Ap f b c
 
   -- homomorphism
-  -> (b -> f b)
-  -> (a -> f a)
-  -> (f (a -> b) -> f a -> f b)
-  -> ((a -> b) -> f (a -> b))
+  -> Pure f b
+  -> Pure f a
+  -> Ap f a b
+  -> Pure f (a -> b)
 
   -- interchange
-  -> (f ((a -> b) -> b) -> f  (a -> b) -> f b)
-  -> (  ((a -> b) -> b) -> f ((a -> b) -> b))
+  -> Ap f (a -> b) b
+  -> Pure f ((a -> b) -> b)
 
   -> QC Unit
-checkApplicative' (==) (===) (====)
+checkApplicative' (==) (===) (====) (<$>)
 
   idAPv pureId
 
@@ -99,6 +100,7 @@ checkApplicative' (==) (===) (====)
 
   y_APu pure_X = do
 
+  checkFunctor' (==) (<$>)
   quickCheck identity
   quickCheck composition
   quickCheck homomorphism
@@ -126,15 +128,11 @@ checkApplicative :: forall f a b c.
   , Arbitrary b
   , Arbitrary a
   , Eq (f a), Eq (f b), Eq (f c) )
-  -- identity
-  => (f (a -> a) -> f a -> f a) -> ((a -> a) -> f (a -> a))
-  -- composition
-  -> (f (a -> c) -> f a -> f c) -> (f ((a -> b) -> a -> c) -> f (a -> b) -> f (a -> c)) -> (f ((b -> c) -> (a -> b) -> a -> c) -> f (b -> c) -> f ((a -> b) -> a -> c)) -> (((b -> c) -> (a -> b) -> a -> c) -> f ((b -> c) ->  (a -> b) -> a -> c)) -> (f (a -> b) -> f a -> f b) -> (f (b -> c) -> f b -> f c)
-  -- homomorphism
-  -> (b -> f b) -> (a -> f a) -> (f (a -> b) -> f a -> f b) -> ((a -> b) -> f (a -> b))
-  -- interchange
-  -> (f ((a -> b) -> b) -> f (a -> b) -> f b) -> (((a -> b) -> b) -> f ((a -> b) -> b))
-  -> QC Unit
+  => Fmap f a a
+  -> Ap f a a -> Pure f (a -> a)
+  -> Ap f a c -> Ap f (a -> b) (a -> c) -> Ap f (b -> c) ((a -> b) -> a -> c) -> Pure f (Category (->) a b c) -> Ap f a b -> Ap f b c
+  -> Pure f b -> Pure f a -> Ap f a b -> Pure f (a -> b)
+  -> Ap f (a -> b) b -> Pure f ((a -> b) -> b) -> QC Unit
 checkApplicative = checkApplicative' (==) (==) (==)
 
 -- checkApplicativeInstance :: forall f a b c.
