@@ -150,6 +150,7 @@ checkApplyInstance :: forall f a b c.
   => f a -> f b -> QC Unit
 checkApplyInstance = checkApplyInstance' ((==) :: CustomEq (f c))
 
+
 checkApplicative' :: forall f a b c.
   ( Arbitrary (f a)
   , Arbitrary (f (a -> b))

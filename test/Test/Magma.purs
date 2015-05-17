@@ -1,6 +1,7 @@
 module Test.Magma where
 
 import Debug.Trace
+import Data.Monoid
 import Test.QuickCheck
 import Test.Binary
 
@@ -22,6 +23,23 @@ checkSemigroup :: forall a.
   , CoArbitrary a )
   => Binary a -> QC Unit
 checkSemigroup = checkSemigroup' (==)
+
+checkSemigroupInstance' :: forall a.
+  ( Semigroup a
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
+  => CustomEq a -> QC Unit
+checkSemigroupInstance' (==) = checkSemigroup' (==) (<>)
+
+checkSemigroupInstance :: forall a.
+  ( Semigroup a
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a
+  , Eq a )
+  => a -> QC Unit
+checkSemigroupInstance _ = checkSemigroupInstance' ((==) :: CustomEq a)
 
 checkMonoid' :: forall a.
   ( Show a
@@ -54,6 +72,24 @@ checkMonoid :: forall a.
   , CoArbitrary a )
   => Binary a -> Id a -> QC Unit
 checkMonoid = checkMonoid' (==)
+
+checkMonoidInstance' :: forall a.
+  ( Monoid a
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
+  => CustomEq a -> QC Unit
+checkMonoidInstance' (==) = checkMonoid' (==) (<>) mempty
+
+checkMonoidInstance :: forall a.
+  ( Monoid a
+  , Eq a
+  , Show a
+  , Arbitrary a
+  , CoArbitrary a )
+  => a -> QC Unit
+checkMonoidInstance _ = checkMonoid'
+  ((==) :: CustomEq a) (<>) mempty
 
 checkCommutativeMonoid' :: forall a.
   ( Show a
