@@ -75,7 +75,7 @@ checkApplicative' :: forall f a b c.
     -> f ((b -> c) ->  (a -> b) ->    a -> c) ) -- pure
 
   -> (f        (b ->   c)
-    ->        f b -> f c) -- u <*> (v 
+    ->        f b -> f c) -- u <*> (v
   -> (f (a ->   b)
     -> f a -> f b) -- (v <*> w)
 
@@ -84,9 +84,9 @@ checkApplicative' :: forall f a b c.
   -> QC Unit
 checkApplicative' (==) (===) (====)
 
-  applya purea
+  applyaaaa pureaa
 
-  applyb applyb' applyb'' pureb applyb_' applyb_''
+  vAPw uAPv pureleftAPu pureleft uAP'v 'vAPw'
 
   purec = do
 
@@ -98,10 +98,10 @@ checkApplicative' (==) (===) (====)
   where
 
   identity :: f a -> Boolean
-  identity v = (purea id `applya` v) == (v :: f a)
+  identity v = (pureaa id `applyaaaa` v) == (v :: f a)
 
   composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
-  composition u v w = (pureb (<<<) `applyb''` u `applyb'` v `applyb` w) ==== (u `applyb_'` (v `applyb_''` w))
+  composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) ==== (u `uAP'v` (v `'vAPw'` w))
   --
   -- homomorphism :: (a -> b) -> a -> Boolean
   -- homomorphism f x = (pure f <*> pure x) === ((pure (f x)) :: f b)
