@@ -71,7 +71,8 @@ checkFunctorInstance :: forall f a.
 checkFunctorInstance _ = checkFunctorInstance' ((==) :: CustomEq (f a))
 
 checkApply' :: forall f a b c.
-  ( Arbitrary (f a)
+  ( Applicative f
+  , Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
   , Show (f a) )
@@ -93,7 +94,8 @@ checkApply' (==) vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v = do
   composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) == (u `uAP_v` (v `_vAPw_` w))
 
 checkApply :: forall f a b c.
-  ( Arbitrary (f a)
+  ( Applicative f
+  , Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
   , Show (f a)
@@ -107,8 +109,12 @@ checkApply :: forall f a b c.
   -> QC Unit
 checkApply = checkApply' (==)
 
+-- APPLY SHOULD NOT DEPEND ON APPLICATIVE, CLEAN COMPOSITION TO
+-- (<<<) <$> f <*> g <*> h = f <*> (g <*> h)
+
 checkApplyInstance' :: forall f a b c.
-  ( Apply f
+  ( Applicative f
+  , Apply f
   , Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
