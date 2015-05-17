@@ -51,8 +51,7 @@ checkFunctorInstance :: forall f a.
 checkFunctorInstance _ = checkFunctorInstance' ((==) :: CustomEq (f a))
 
 checkApplicative' :: forall f a b c.
-  ( Applicative f
-  , Arbitrary (f a)
+  ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
   , CoArbitrary a
@@ -79,10 +78,15 @@ checkApplicative' :: forall f a b c.
   -> (f        (b ->   c)
     ->        f b -> f c) -- u <*> (v
 
+  -- homomorphism
   -> (b -> f b)
   -> (a -> f a)
   -> (f (a -> b) -> f a -> f b)
   -> ((a -> b) -> f (a -> b))
+
+  -- interchange
+  -> (f ((a -> b) -> b) -> f  (a -> b) -> f b)
+  -> (  ((a -> b) -> b) -> f ((a -> b) -> b))
 
   -> QC Unit
 checkApplicative' (==) (===) (====)
@@ -91,12 +95,14 @@ checkApplicative' (==) (===) (====)
 
   vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v
 
-  pureb purea fAPpurea pureAB = do
+  pureb purea fAPpurea pureAB
+
+  y_APu pure_X = do
 
   quickCheck identity
   quickCheck composition
   quickCheck homomorphism
-  -- quickCheck interchange
+  quickCheck interchange
 
   where
 
@@ -109,8 +115,8 @@ checkApplicative' (==) (===) (====)
   homomorphism :: (a -> b) -> a -> Boolean
   homomorphism f x = (pureAB f `fAPpurea` purea x) === ((pureb (f x)) :: f b)
 
-  -- interchange :: a -> f (a -> b) -> Boolean
-  -- interchange y u = (u <*> pure y) === (pure (\x -> x y) <*> u)
+  interchange :: a -> f (a -> b) -> Boolean
+  interchange y u = (u `fAPpurea` purea y) === (pure_X (\x -> x y) `y_APu` u)
 
 -- undefined :: forall a. a
 -- undefined = undefined' unit
