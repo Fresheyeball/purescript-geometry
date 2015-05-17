@@ -77,21 +77,25 @@ checkApply' :: forall f a b c.
   , Show (f a)
   , Show (f b)
   , Show (f c) )
-  => CustomEq (f c)
+  => CustomEq (f a)
+  -> CustomEq (f c)
+  -> Fmap f a a
   -> Fmap f (b -> c) ((a -> b) -> a -> c)
   -> Ap f a c
   -> Ap f (a -> b) (a -> c)
   -> Ap f a b
   -> Ap f b c
   -> QC Unit
-checkApply' (==) leftFMAPu vAPw uAPv _vAPw_ uAP_v =
+checkApply' (==) (====) (<$>) leftFMAPu vAPw uAPv _vAPw_ uAP_v =
 
+  trace "Functor <= Apply"
+  checkFunctor' (==) (<$>)
   quickCheck composition
 
   where
 
   composition :: f (b -> c) -> f (a -> b) -> f a -> Result
-  composition u v w = ((<<<) `leftFMAPu` u `uAPv` v `vAPw` w) == (u `uAP_v` (v `_vAPw_` w))
+  composition u v w = ((<<<) `leftFMAPu` u `uAPv` v `vAPw` w) ==== (u `uAP_v` (v `_vAPw_` w))
     <?> "Apply composition, it, did, not, hold, cuz like"
     <> "\n f a = " <> show w
     <> "\n and if you think about it"
@@ -185,8 +189,7 @@ checkApplicative' (==) (===) (====) (<$>)
   pureb purea fAPpurea pureAB
   y_APu pure_X = do
 
-  checkFunctor' (==) (<$>)
-  checkApply' (====) leftFMAPu vAPw uAPv _vAPw_ uAP_v
+  checkApply' (==) (<$>) (====) leftFMAPu vAPw uAPv _vAPw_ uAP_v
   quickCheck identity
   quickCheck homomorphism
   quickCheck interchange
