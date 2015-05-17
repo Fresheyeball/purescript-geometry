@@ -482,29 +482,8 @@ checkMonadInstance' :: forall m a b c.
   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
 checkMonadInstance' (==) (===) (====) = checkMonad'
   (==) (===) (====)
-  ((>>=) :: Bind m a a)
-  ((>>=) :: Bind m a b)
-  ((>>=) :: Bind m a c)
-  ((>>=) :: Bind m b c)
-  ((>>=) :: Bind m c c)
-  (pure :: Pure m a)
-  (pure :: Pure m c)
-  ((<$>) :: Fmap m c c)
-  ((<*>) :: Ap m a a)
-  (pure :: Pure m (a -> a))
-  ((<*>) :: Ap m (b -> c) ((a -> b) -> a -> c))
-  (pure :: Pure m (Category (->) a b c))
-  ((<$>) :: Fmap m (b -> c) ((a -> b) -> a -> c))
-  ((<*>) :: Ap m a c)
-  ((<*>) :: Ap m (a -> b) (a -> c))
-  ((<*>) :: Ap m a b)
-  ((<*>) :: Ap m b c)
-  (pure :: Pure m b)
-  (pure :: Pure m a)
-  ((<*>) :: Ap m a b)
-  (pure :: Pure m (a -> b))
-  ((<*>) :: Ap m (a -> b) b)
-  (pure :: Pure m ((a -> b) -> b))
+  (>>=) (>>=) (>>=) (>>=) (>>=) pure 
+  pure (<$>) (<*>) pure (<*>) pure (<$>) (<*>) (<*>) (<*>) (<*>) pure pure (<*>) pure (<*>) pure
 
 checkMonadInstance :: forall m a b c.
   ( Monad m
