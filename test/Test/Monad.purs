@@ -13,10 +13,9 @@ type Category f a b c = (f b c) -> (f a b) -> a -> c
 checkFunctor' :: forall f a.
   ( Arbitrary a
   , CoArbitrary a
-  , Arbitrary (f a))
-  => CustomEq (f a)
-  -> Fmap f a a
-  -> QC Unit
+  , Arbitrary (f a)
+  , Show (f a) )
+  => CustomEq (f a) -> Fmap f a a -> QC Unit
 checkFunctor' (==) (<$>) = do
   trace "Functor identity"
   quickCheck identity
@@ -25,8 +24,13 @@ checkFunctor' (==) (<$>) = do
 
   where
 
-  identity :: f a -> Boolean
+  identity :: f a -> Result
   identity f = id <$> f == id f
+    <?> "oh no bro! functor identity isn't cool when"
+    <> "\n f a = " <> show f
+    <> "so..."
+    <> "id <$> f = " <> show (id <$> f)
+    <> "id f = " <> show (id f)
 
   associativity :: f a -> (a -> a) -> (a -> a) -> Boolean
   associativity f p q = (p <<< q) <$> f == ((<$>) p <<< (<$>) q) f
@@ -35,7 +39,8 @@ checkFunctor :: forall f a.
   ( Arbitrary a
   , CoArbitrary a
   , Arbitrary (f a)
-  , Eq (f a))
+  , Eq (f a)
+  , Show (f a) )
   => Fmap f a a -> QC Unit
 checkFunctor = checkFunctor' (==)
 
@@ -43,7 +48,8 @@ checkFunctorInstance' :: forall f a.
   ( Functor f
   , Arbitrary a
   , CoArbitrary a
-  , Arbitrary (f a))
+  , Arbitrary (f a)
+  , Show (f a) )
   => CustomEq (f a) -> QC Unit
 checkFunctorInstance' (==) = checkFunctor' (==) (<$>)
 
@@ -52,7 +58,8 @@ checkFunctorInstance :: forall f a.
   , Eq (f a)
   , Arbitrary a
   , CoArbitrary a
-  , Arbitrary (f a))
+  , Arbitrary (f a)
+  , Show (f a) )
   => f a -> QC Unit
 checkFunctorInstance _ = checkFunctorInstance' ((==) :: CustomEq (f a))
 
@@ -62,10 +69,9 @@ checkApplicative' :: forall f a b c.
   , Arbitrary (f (b -> c))
   , CoArbitrary a
   , Arbitrary b
-  , Arbitrary a )
-  => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c)
-
-  -> Fmap f a a
+  , Arbitrary a
+  , Show (f a) )
+  => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> Fmap f a a
 
   -- identity
   -> Ap f a a
@@ -91,13 +97,9 @@ checkApplicative' :: forall f a b c.
 
   -> QC Unit
 checkApplicative' (==) (===) (====) (<$>)
-
   idAPv pureId
-
   vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v
-
   pureb purea fAPpurea pureAB
-
   y_APu pure_X = do
 
   checkFunctor' (==) (<$>)
@@ -127,6 +129,7 @@ checkApplicative :: forall f a b c.
   , CoArbitrary a
   , Arbitrary b
   , Arbitrary a
+  , Show (f a)
   , Eq (f a), Eq (f b), Eq (f c) )
   => Fmap f a a
   -> Ap f a a -> Pure f (a -> a)
@@ -135,20 +138,31 @@ checkApplicative :: forall f a b c.
   -> Ap f (a -> b) b -> Pure f ((a -> b) -> b) -> QC Unit
 checkApplicative = checkApplicative' (==) (==) (==)
 
--- checkApplicativeInstance :: forall f a b c.
---   ( Applicative f
---   , Arbitrary (f a)
---   , Arbitrary (f (a -> b))
---   , Arbitrary (f (b -> c))
---   , CoArbitrary a
---   , Arbitrary b
---   , Arbitrary a
---   , Eq (f a)
---   , Eq (f b)
---   , Eq (f c))
---   => f a -> f b -> f c -> QC Unit
--- checkApplicativeInstance ta tb tc = undefined
+checkApplicativeInstance' :: forall f a b c.
+  ( Applicative f
+  , Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , CoArbitrary a
+  , Arbitrary b
+  , Arbitrary a
+  , Show (f a) )
+  => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> QC Unit
+checkApplicativeInstance' (==) (===) (====) = checkApplicative' (==) (===) (====)
+  (<$>) (<*>) pure (<*>) (<*>) (<*>) pure (<*>) (<*>) pure pure (<*>) pure (<*>) pure
 
+checkApplicativeInstance :: forall f a b c.
+  ( Applicative f
+  , Arbitrary (f a)
+  , Arbitrary (f (a -> b))
+  , Arbitrary (f (b -> c))
+  , CoArbitrary a
+  , Arbitrary b
+  , Arbitrary a
+  , Show (f a)
+  , Eq (f a), Eq (f b), Eq (f c) ) => f a -> f b -> f c -> QC Unit
+checkApplicativeInstance _ _ _ = checkApplicativeInstance'
+  ((==) :: CustomEq (f a)) ((==) :: CustomEq (f b)) ((==) :: CustomEq (f c))
 --
 -- checkMonad :: forall m a.
 --   ( Monad m
