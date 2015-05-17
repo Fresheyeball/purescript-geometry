@@ -58,26 +58,56 @@ checkApplicative' :: forall f a b c.
   , CoArbitrary a
   , Arbitrary b
   , Arbitrary a )
-  => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> QC Unit
-checkApplicative' (==) (===) (====) = do
+  => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c)
+
+  -- identity
+  -> (            f (a -> a) -> f a -> f a) -- <*>
+  -> ((a -> a) -> f (a -> a)) -- pure
+
+  -- composition
+  -> ( f  (a -> c) -> f a ->       f       c) -- v <*> w
+  -> ( f ((a -> b) ->   a ->               c)
+    -> f               (a -> b) -> f (a -> c) ) -- u <*> v
+  -> ( f ((b -> c) ->  (a -> b) ->    a -> c)
+    -> f ( b -> c)
+    -> f              ((a -> b) ->    a -> c) ) -- pure (<<<) <*> u
+  -> (   ((b -> c) ->  (a -> b) ->    a -> c)
+    -> f ((b -> c) ->  (a -> b) ->    a -> c) ) -- pure
+
+  -> (f        (b ->   c)
+    ->        f b -> f c) -- u <*> (v 
+  -> (f (a ->   b)
+    -> f a -> f b) -- (v <*> w)
+
+  -> a
+
+  -> QC Unit
+checkApplicative' (==) (===) (====)
+
+  applya purea
+
+  applyb applyb' applyb'' pureb applyb_' applyb_''
+
+  purec = do
+
   quickCheck identity
-  quickCheck composition
-  quickCheck homomorphism
-  quickCheck interchange
+  -- quickCheck composition
+  -- quickCheck homomorphism
+  -- quickCheck interchange
 
   where
 
   identity :: f a -> Boolean
-  identity v = (pure id <*> v) == v
+  identity v = (purea id `applya` v) == (v :: f a)
 
   composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
-  composition u v w = (pure (<<<) <*> u <*> v <*> w) ==== (u <*> (v <*> w))
-
-  homomorphism :: (a -> b) -> a -> Boolean
-  homomorphism f x = (pure f <*> pure x) === ((pure (f x)) :: f b)
-
-  interchange :: a -> f (a -> b) -> Boolean
-  interchange y u = (u <*> pure y) === (pure (\x -> x y) <*> u)
+  composition u v w = (pureb (<<<) `applyb''` u `applyb'` v `applyb` w) ==== (u `applyb_'` (v `applyb_''` w))
+  --
+  -- homomorphism :: (a -> b) -> a -> Boolean
+  -- homomorphism f x = (pure f <*> pure x) === ((pure (f x)) :: f b)
+  --
+  -- interchange :: a -> f (a -> b) -> Boolean
+  -- interchange y u = (u <*> pure y) === (pure (\x -> x y) <*> u)
 
 -- undefined :: forall a. a
 -- undefined = undefined' unit
