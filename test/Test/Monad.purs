@@ -9,6 +9,7 @@ type Fmap  f a b =   (a -> b) -> f a -> f b
 type Ap    f a b = f (a -> b) -> f a -> f b
 type Pure  f a   = a -> f a
 type Category f a b c = (f b c) -> (f a b) -> a -> c
+type Bind m a b = m a -> (a -> m b) -> m b
 
 checkFunctor' :: forall f a.
   ( Arbitrary a
@@ -74,12 +75,9 @@ checkApply' :: forall f a b c.
   ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
   , Arbitrary (f (b -> c))
-  , Arbitrary c
-  , CoArbitrary c
+  , Arbitrary c, CoArbitrary c
   , Arbitrary (f c)
-  , Show (f a)
-  , Show (f b)
-  , Show (f c) )
+  , Show (f a), Show (f b), Show (f c) )
   => CustomEq (f c)
   -> Fmap f c c
   -> Fmap f (b -> c) ((a -> b) -> a -> c)
@@ -218,9 +216,6 @@ checkApplicative' (==) (===) (====) (<$>)
     <> "\n but"
     <> "\n u <*> (v <*> w) = " <> show (u `uAP_v` (v `_vAPw_` w))
 
-    -- Homomorphism: (pure f) <*> (pure x) = pure (f x)
-    -- Interchange: u <*> (pure y) = (pure ($ y)) <*> u
-
   identity :: f a -> Result
   identity v = (pureId id `idAPv` v) == (v :: f a)
     <?> "Applicative idenity, its just not true dude, when"
@@ -293,6 +288,44 @@ checkApplicativeInstance :: forall f a b c.
   , Eq (f a), Eq (f b), Eq (f c) ) => f a -> f b -> f c -> QC Unit
 checkApplicativeInstance _ _ _ = checkApplicativeInstance'
   ((==) :: CustomEq (f a)) ((==) :: CustomEq (f b)) ((==) :: CustomEq (f c))
+
+checkBind' :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary a
+  , Show (m a), Show (m c) )
+  => CustomEq (m c)
+  -> Bind m a b
+  -> Bind m b c
+  -> Bind m a c
+  -> QC Unit
+checkBind' (==) bind1 bind2 bind3 = do
+
+  quickCheck associativity
+
+  where
+  associativity :: m a -> (a -> m b) -> (b -> m c) -> Result
+  associativity x f g = ((x `bind1` f) `bind2` g) == (x `bind3` (\k -> f k `bind2` g))
+    <?> "bind associativity, dude, it didn't pass. cuz when"
+    <> "\n x = " <> show x
+    <> "\n so..."
+    <> "\n (x >>= f) >>= g = " <> show ((x `bind1` f) `bind2` g)
+    <> "\n but then"
+    <> "\n x >>= (λk -> f k >>= g) = " <> show (x `bind3` (\k -> f k `bind2` g))
+
+checkBind :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary a
+  , Eq (m c)
+  , Show (m a), Show (m c) )
+  => Bind m a b
+  -> Bind m b c
+  -> Bind m a c
+  -> QC Unit
+checkBind = checkBind' (==)
 
 -- checkMonad :: forall m a.
 --   ( Monad m
