@@ -160,6 +160,12 @@ checkApplicative' :: forall f a b c.
   , Arbitrary (f c)
   , Show a, Show (f a), Show (f b), Show (f c) )
   => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> Fmap f c c
+  -- Apply
+  -> Fmap f (b -> c) ((a -> b) -> a -> c)
+  -> Ap f a c
+  -> Ap f (a -> b) (a -> c)
+  -> Ap f a b
+  -> Ap f b c
 
   -- identity
   -> Ap f a a
@@ -168,13 +174,6 @@ checkApplicative' :: forall f a b c.
   -- Composition
   -> Ap f (b -> c) ((a -> b) -> a -> c)
   -> Pure f (Category (->) a b c)
-
-  -- Apply
-  -> Fmap f (b -> c) ((a -> b) -> a -> c)
-  -> Ap f a c
-  -> Ap f (a -> b) (a -> c)
-  -> Ap f a b
-  -> Ap f b c
 
   -- homomorphism
   -> Pure f b
@@ -188,9 +187,10 @@ checkApplicative' :: forall f a b c.
 
   -> QC Unit
 checkApplicative' (==) (===) (====) (<$>)
+  leftFMAPu vAPw uAPv _vAPw_ uAP_v
   idAPv pureId
   pureleftAPu pureleft
-  leftFMAPu vAPw uAPv _vAPw_ uAP_v
+
   pureb purea fAPpurea pureAB
   y_APu pure_X = do
 
@@ -253,9 +253,9 @@ checkApplicative :: forall f a b c.
   , Show a, Show (f a), Show (f b), Show (f c)
   , Eq (f a), Eq (f b), Eq (f c) )
   => Fmap f c c
+  -> Fmap f (b -> c) ((a -> b) -> a -> c) -> Ap f a c -> Ap f (a -> b) (a -> c) -> Ap f a b -> Ap f b c
   -> Ap f a a -> Pure f (a -> a)
   -> Ap f (b -> c) ((a -> b) -> a -> c) -> Pure f (Category (->) a b c)
-  -> Fmap f (b -> c) ((a -> b) -> a -> c) -> Ap f a c -> Ap f (a -> b) (a -> c) -> Ap f a b -> Ap f b c
   -> Pure f b -> Pure f a -> Ap f a b -> Pure f (a -> b)
   -> Ap f (a -> b) b -> Pure f ((a -> b) -> b)
   -> QC Unit
@@ -273,7 +273,7 @@ checkApplicativeInstance' :: forall f a b c fn ap.
   , Show a, Show (f a), Show (f b), Show (f c) )
   => CustomEq (f a) -> CustomEq (f b) -> CustomEq (f c) -> QC Unit
 checkApplicativeInstance' (==) (===) (====) = checkApplicative' (==) (===) (====)
-  (<$>) (<*>) pure (<*>) pure (<$>) (<*>) (<*>) (<*>) (<*>) pure pure (<*>) pure (<*>) pure
+  (<$>) (<$>) (<*>) (<*>) (<*>) (<*>) (<*>) pure (<*>) pure pure pure (<*>) pure (<*>) pure
 
 checkApplicativeInstance :: forall f a b c.
   ( Applicative f
@@ -374,15 +374,15 @@ checkMonad' :: forall m a b c.
   -> Pure m c
   -- applicative
   -> Fmap m c c
-  -> Ap m a a
-  -> Pure m (a -> a)
-  -> Ap m (b -> c) ((a -> b) -> a -> c)
-  -> Pure m (Category (->) a b c)
   -> Fmap m (b -> c) ((a -> b) -> a -> c)
   -> Ap m a c
   -> Ap m (a -> b) (a -> c)
   -> Ap m a b
   -> Ap m b c
+  -> Ap m a a
+  -> Pure m (a -> a)
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
   -> Pure m b
   -> Pure m a
   -> Ap m a b
@@ -392,17 +392,18 @@ checkMonad' :: forall m a b c.
   -> QC Unit
 checkMonad'
   (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc
-  (<$>) idAPv pureId
+  (<$>) leftFMAPu vAPw uAPv _vAPw_ uAP_v
+  idAPv pureId
   pureleftAPu pureleft
-  leftFMAPu vAPw uAPv _vAPw_ uAP_v
   pureb purea fAPpurea pureAB
   y_APu pure_X = do
 
   trace "Monad <= Applicative"
   checkApplicative'
-    (==) (===) (====) (<$>) idAPv pureId
+    (==) (===) (====)
+    (<$>) leftFMAPu vAPw uAPv _vAPw_ uAP_v
+    idAPv pureId
     pureleftAPu pureleft
-    leftFMAPu vAPw uAPv _vAPw_ uAP_v
     pureb purea fAPpurea pureAB
     y_APu pure_X
 
@@ -450,15 +451,15 @@ checkMonad :: forall m a b c.
   -> Pure m c
   -- applicative
   -> Fmap m c c
-  -> Ap m a a
-  -> Pure m (a -> a)
-  -> Ap m (b -> c) ((a -> b) -> a -> c)
-  -> Pure m (Category (->) a b c)
   -> Fmap m (b -> c) ((a -> b) -> a -> c)
   -> Ap m a c
   -> Ap m (a -> b) (a -> c)
   -> Ap m a b
   -> Ap m b c
+  -> Ap m a a
+  -> Pure m (a -> a)
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
   -> Pure m b
   -> Pure m a
   -> Ap m a b
@@ -482,8 +483,8 @@ checkMonadInstance' :: forall m a b c.
   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
 checkMonadInstance' (==) (===) (====) = checkMonad'
   (==) (===) (====)
-  (>>=) (>>=) (>>=) (>>=) (>>=) pure 
-  pure (<$>) (<*>) pure (<*>) pure (<$>) (<*>) (<*>) (<*>) (<*>) pure pure (<*>) pure (<*>) pure
+  (>>=) (>>=) (>>=) (>>=) (>>=) pure
+  pure (<$>) (<$>) (<*>) (<*>) (<*>) (<*>) (<*>) pure (<*>) pure pure pure (<*>) pure (<*>) pure
 
 checkMonadInstance :: forall m a b c.
   ( Monad m
