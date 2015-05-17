@@ -79,7 +79,10 @@ checkApplicative' :: forall f a b c.
   -> (f        (b ->   c)
     ->        f b -> f c) -- u <*> (v
 
-  -> a
+  -> (b -> f b)
+  -> (a -> f a)
+  -> (f (a -> b) -> f a -> f b)
+  -> ((a -> b) -> f (a -> b))
 
   -> QC Unit
 checkApplicative' (==) (===) (====)
@@ -88,11 +91,11 @@ checkApplicative' (==) (===) (====)
 
   vAPw uAPv pureleftAPu pureleft _vAPw_ uAP_v
 
-  purec = do
+  pureb purea fAPpurea pureAB = do
 
   quickCheck identity
   quickCheck composition
-  -- quickCheck homomorphism
+  quickCheck homomorphism
   -- quickCheck interchange
 
   where
@@ -102,10 +105,10 @@ checkApplicative' (==) (===) (====)
 
   composition :: f (b -> c) -> f (a -> b) -> f a -> Boolean
   composition u v w = (pureleft (<<<) `pureleftAPu` u `uAPv` v `vAPw` w) ==== (u `uAP_v` (v `_vAPw_` w))
-  --
-  -- homomorphism :: (a -> b) -> a -> Boolean
-  -- homomorphism f x = (pure f <*> pure x) === ((pure (f x)) :: f b)
-  --
+
+  homomorphism :: (a -> b) -> a -> Boolean
+  homomorphism f x = (pureAB f `fAPpurea` purea x) === ((pureb (f x)) :: f b)
+
   -- interchange :: a -> f (a -> b) -> Boolean
   -- interchange y u = (u <*> pure y) === (pure (\x -> x y) <*> u)
 
