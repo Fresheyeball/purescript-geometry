@@ -150,7 +150,6 @@ checkApplyInstance :: forall f a b c.
   => f a -> f b -> QC Unit
 checkApplyInstance = checkApplyInstance' ((==) :: CustomEq (f c))
 
-
 checkApplicative' :: forall f a b c.
   ( Arbitrary (f a)
   , Arbitrary (f (a -> b))
@@ -316,156 +315,211 @@ checkBind' (==) bind1 bind2 bind3 = do
     <> "\n (x >>= f) >>= g = " <> show ((x `bind1` f) `bind2` g)
     <> "\n but then"
     <> "\n x >>= (λk -> f k >>= g) = " <> show (x `bind3` (\k -> f k `bind2` g))
---
--- checkBind :: forall m a b c.
---   ( Arbitrary (m a)
---   , Arbitrary (a -> m b)
---   , Arbitrary (b -> m c)
---   , Arbitrary a
---   , Eq (m c)
---   , Show (m a), Show (m c) )
---   => Bind m a b
---   -> Bind m b c
---   -> Bind m a c
---   -> QC Unit
--- checkBind = checkBind' (==)
---
--- checkBindInstance' :: forall m a b c.
---   ( Bind m
---   , Arbitrary (m a)
---   , Arbitrary (a -> m b)
---   , Arbitrary (b -> m c)
---   , Arbitrary a
---   , Show (m a), Show (m c) )
---   => CustomEq (m c) -> m a -> m b -> QC Unit
--- checkBindInstance' (==) _ _ = checkBind' (==)
---   ((>>=) :: Bind m a b) ((>>=) :: Bind m b c) ((>>=) :: Bind m a c)
---
--- checkBindInstance :: forall m a b c.
---   ( Bind m
---   , Arbitrary (m a)
---   , Arbitrary (a -> m b)
---   , Arbitrary (b -> m c)
---   , Arbitrary a
---   , Eq (m c)
---   , Show (m a), Show (m c) )
---   => m a -> m b -> m c -> QC Unit
--- checkBindInstance ma mb _ = checkBindInstance' ((==) :: CustomEq (m c)) ma mb
---
--- checkMonad' :: forall m a b c.
---   ( Arbitrary (m a)
---   , Arbitrary (a -> m a)
---   , Arbitrary (a -> m b)
---   , Arbitrary (b -> m c)
---   , Arbitrary (m (a -> b))
---   , Arbitrary (m (b -> c))
---   , Arbitrary a, CoArbitrary a
---   , Arbitrary b
---   , Arbitrary c, CoArbitrary c
---   , Arbitrary (m c)
---   , Show a, Show c, Show (m a), Show (m b), Show (m c) )
---   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c)
---   -> Bind m a a
---   -> Bind m a b
---   -> Bind m a c
---   -> Bind m b c
---   -> Bind m c c
---   -> Pure m a
---   -> Pure m c
---   -- applicative
---   -> Fmap m c c
---   -> Ap m a a
---   -> Pure m (a -> a)
---   -> Ap m (b -> c) ((a -> b) -> a -> c)
---   -> Pure m (Category (->) a b c)
---   -> Fmap m (b -> c) ((a -> b) -> a -> c)
---   -> Ap m a c
---   -> Ap m (a -> b) (a -> c)
---   -> Ap m a b
---   -> Ap m b c
---   -> Pure m b
---   -> Pure m a
---   -> Ap m a b
---   -> Pure m (a -> b)
---   -> Ap m (a -> b) b
---   -> Pure m ((a -> b) -> b)
---   -> QC Unit
--- checkMonad'
---   (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc
---   (<$>) idAPv pureId
---   pureleftAPu pureleft
---   leftFMAPu vAPw uAPv _vAPw_ uAP_v
---   pureb purea fAPpurea pureAB
---   y_APu pure_X = do
---
---   trace "Monad <= Applicative"
---   checkApplicative'
---     (==) (===) (====) (<$>) idAPv pureId
---     pureleftAPu pureleft
---     leftFMAPu vAPw uAPv _vAPw_ uAP_v
---     pureb purea fAPpurea pureAB
---     y_APu pure_X
---
---   trace "Monad <= Bind"
---   checkBind' (====) bindab bindbc bindac
---
---   quickCheck leftIdentity
---   quickCheck rightIdentity
---
---   where
---
---   leftIdentity :: c -> (c -> m c) -> Result
---   leftIdentity x f = (returnc x `bindcc` f) ==== (f x)
---     <?> "woah, no left id on Monad bro, when"
---     <> "\n x = " <> show x
---     <> "\n and like"
---     <> "\n return x >>= f = " <> show (returnc x `bindcc` f)
---     <> "\n but totally"
---     <> "\n f x = " <> show (f x)
---
---   rightIdentity :: m a -> Result
---   rightIdentity m = (m `bindaa` returna) == m
---     <?> "woah, no right id on Monad bro, when"
---     <> "\n m = " <> show m
---     <> "\n but like"
---     <> "\n m >>= return = " <> show (m `bindaa` returna)
 
--- checkMonadInstance' :: forall m a b c.
---   ( Monad m
---   , Arbitrary (m a)
---   , Arbitrary (a -> m a)
---   , Arbitrary (a -> m b)
---   , Arbitrary (b -> m c)
---   , Arbitrary (m (a -> b))
---   , Arbitrary (m (b -> c))
---   , Arbitrary a, CoArbitrary a
---   , Arbitrary b
---   , Arbitrary c, CoArbitrary c
---   , Arbitrary (m c)
---   , Show a, Show c, Show (m a), Show (m b), Show (m c) )
---   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
--- checkMonadInstance' (==) (===) (====) = checkMonad'
---   (==) (===) (====)
---   ((>>=) :: Bind m a a)
---   ((>>=) :: Bind m a b)
---   ((>>=) :: Bind m a c)
---   ((>>=) :: Bind m b c)
---   ((>>=) :: Bind m c c)
---   (pure :: Pure m a)
---   (pure :: Pure m c)
---   ((<$>) :: Fmap m c c)
---   ((<*>) :: Ap m a a)
---   (pure :: Pure m (a -> a))
---   ((<*>) :: Ap m (b -> c) ((a -> b) -> a -> c))
---   (pure :: Pure m (Category (->) a b c))
---   ((<$>) :: Fmap m (b -> c) ((a -> b) -> a -> c))
---   ((<*>) :: Ap m a c)
---   ((<*>) :: Ap m (a -> b) (a -> c))
---   ((<*>) :: Ap m a b)
---   ((<*>) :: Ap m b c)
---   (pure :: Pure m b)
---   (pure :: Pure m a)
---   ((<*>) :: Ap m a b)
---   (pure :: Pure m (a -> b))
---   ((<*>) :: Ap m (a -> b) b)
---   (pure :: Pure m ((a -> b) -> b))
+checkBind :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , CoArbitrary b
+  , Eq (m c)
+  , Show (m a), Show (m c) )
+  => Bind m a b
+  -> Bind m b c
+  -> Bind m a c
+  -> QC Unit
+checkBind = checkBind' (==)
+
+checkBindInstance' :: forall m a b c.
+  ( Bind m
+  , Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , CoArbitrary b
+  , Show (m a), Show (m c) )
+  => CustomEq (m c) -> m a -> m b -> QC Unit
+checkBindInstance' (==) _ _ = checkBind' (==)
+  ((>>=) :: Bind m a b) ((>>=) :: Bind m b c) ((>>=) :: Bind m a c)
+
+checkBindInstance :: forall m a b c.
+  ( Bind m
+  , Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , CoArbitrary b
+  , Eq (m c)
+  , Show (m a), Show (m c) )
+  => m a -> m b -> m c -> QC Unit
+checkBindInstance ma mb _ = checkBindInstance' ((==) :: CustomEq (m c)) ma mb
+
+checkMonad' :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b, CoArbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Show a, Show c, Show (m a), Show (m b), Show (m c) )
+  => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c)
+  -> Bind m a a
+  -> Bind m a b
+  -> Bind m a c
+  -> Bind m b c
+  -> Bind m c c
+  -> Pure m a
+  -> Pure m c
+  -- applicative
+  -> Fmap m c c
+  -> Ap m a a
+  -> Pure m (a -> a)
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
+  -> Fmap m (b -> c) ((a -> b) -> a -> c)
+  -> Ap m a c
+  -> Ap m (a -> b) (a -> c)
+  -> Ap m a b
+  -> Ap m b c
+  -> Pure m b
+  -> Pure m a
+  -> Ap m a b
+  -> Pure m (a -> b)
+  -> Ap m (a -> b) b
+  -> Pure m ((a -> b) -> b)
+  -> QC Unit
+checkMonad'
+  (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc
+  (<$>) idAPv pureId
+  pureleftAPu pureleft
+  leftFMAPu vAPw uAPv _vAPw_ uAP_v
+  pureb purea fAPpurea pureAB
+  y_APu pure_X = do
+
+  trace "Monad <= Applicative"
+  checkApplicative'
+    (==) (===) (====) (<$>) idAPv pureId
+    pureleftAPu pureleft
+    leftFMAPu vAPw uAPv _vAPw_ uAP_v
+    pureb purea fAPpurea pureAB
+    y_APu pure_X
+
+  trace "Monad <= Bind"
+  checkBind' (====) bindab bindbc bindac
+
+  quickCheck leftIdentity
+  quickCheck rightIdentity
+
+  where
+
+  leftIdentity :: c -> (c -> m c) -> Result
+  leftIdentity x f = (returnc x `bindcc` f) ==== (f x)
+    <?> "woah, no left id on Monad bro, when"
+    <> "\n x = " <> show x
+    <> "\n and like"
+    <> "\n return x >>= f = " <> show (returnc x `bindcc` f)
+    <> "\n but totally"
+    <> "\n f x = " <> show (f x)
+
+  rightIdentity :: m a -> Result
+  rightIdentity m = (m `bindaa` returna) == m
+    <?> "woah, no right id on Monad bro, when"
+    <> "\n m = " <> show m
+    <> "\n but like"
+    <> "\n m >>= return = " <> show (m `bindaa` returna)
+
+checkMonad :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b, CoArbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Show a, Show c, Show (m a), Show (m b), Show (m c)
+  , Eq (m a), Eq (m b), Eq (m c) )
+  => Bind m a a
+  -> Bind m a b
+  -> Bind m a c
+  -> Bind m b c
+  -> Bind m c c
+  -> Pure m a
+  -> Pure m c
+  -- applicative
+  -> Fmap m c c
+  -> Ap m a a
+  -> Pure m (a -> a)
+  -> Ap m (b -> c) ((a -> b) -> a -> c)
+  -> Pure m (Category (->) a b c)
+  -> Fmap m (b -> c) ((a -> b) -> a -> c)
+  -> Ap m a c
+  -> Ap m (a -> b) (a -> c)
+  -> Ap m a b
+  -> Ap m b c
+  -> Pure m b
+  -> Pure m a
+  -> Ap m a b
+  -> Pure m (a -> b)
+  -> Ap m (a -> b) b
+  -> Pure m ((a -> b) -> b)
+  -> QC Unit
+checkMonad = checkMonad' (==) (==) (==)
+
+checkMonadInstance' :: forall m a b c.
+  ( Monad m
+  , Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b, CoArbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Show a, Show c, Show (m a), Show (m b), Show (m c) )
+  => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
+checkMonadInstance' (==) (===) (====) = checkMonad'
+  (==) (===) (====)
+  ((>>=) :: Bind m a a)
+  ((>>=) :: Bind m a b)
+  ((>>=) :: Bind m a c)
+  ((>>=) :: Bind m b c)
+  ((>>=) :: Bind m c c)
+  (pure :: Pure m a)
+  (pure :: Pure m c)
+  ((<$>) :: Fmap m c c)
+  ((<*>) :: Ap m a a)
+  (pure :: Pure m (a -> a))
+  ((<*>) :: Ap m (b -> c) ((a -> b) -> a -> c))
+  (pure :: Pure m (Category (->) a b c))
+  ((<$>) :: Fmap m (b -> c) ((a -> b) -> a -> c))
+  ((<*>) :: Ap m a c)
+  ((<*>) :: Ap m (a -> b) (a -> c))
+  ((<*>) :: Ap m a b)
+  ((<*>) :: Ap m b c)
+  (pure :: Pure m b)
+  (pure :: Pure m a)
+  ((<*>) :: Ap m a b)
+  (pure :: Pure m (a -> b))
+  ((<*>) :: Ap m (a -> b) b)
+  (pure :: Pure m ((a -> b) -> b))
+
+checkMonadInstance :: forall m a b c.
+  ( Monad m
+  , Arbitrary (m a)
+  , Arbitrary (m b)
+  , Arbitrary (m c)
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b, CoArbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Show a, Show c, Show (m a), Show (m b), Show (m c)
+  , Eq (m a), Eq (m b), Eq (m c) )
+  => m a -> m b -> m c -> QC Unit
+checkMonadInstance _ _ _ = checkMonadInstance'
+  ((==) :: CustomEq (m a))
+  ((==) :: CustomEq (m b))
+  ((==) :: CustomEq (m c))
