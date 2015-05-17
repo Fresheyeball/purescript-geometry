@@ -22,19 +22,19 @@ instance coarbY :: (CoArbitrary y) => CoArbitrary (Y y) where
 
 init = do
   trace "Applicative X"
-  checkApplicativeInstance (X 0) (X "") (X false)
-
-  trace "Applicative Y"
-  checkApplicativeInstance (Y 0) (Y "") (Y false)
-
-  trace "Bind X"
-  checkBindInstance (X 0) (X "") (X false)
-
-  trace "Bind Y"
-  checkBindInstance (Y 0) (Y "") (Y false)
-
-  trace "Semiring X"
-  checkSemiringInstance' \(X x) (X x') -> x =~= x'
-
-  trace "Semiring Y"
-  checkSemiringInstance' \(Y y) (Y y') -> y =~= y'
+  -- checkApplicativeInstance (X 0) (X "") (X false)
+  --
+  -- trace "Applicative Y"
+  -- checkApplicativeInstance (Y 0) (Y "") (Y false)
+  --
+  -- trace "Bind X"
+  -- checkBindInstance (X 0) (X "") (X false)
+  --
+  -- trace "Bind Y"
+  -- checkBindInstance (Y 0) (Y "") (Y false)
+  --
+  -- trace "Semiring X"
+  -- checkSemiringInstance' \(X x) (X x') -> x =~= x'
+  --
+  -- trace "Semiring Y"
+  -- checkSemiringInstance' \(Y y) (Y y') -> y =~= y'
