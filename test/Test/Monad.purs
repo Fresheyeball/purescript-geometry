@@ -327,6 +327,15 @@ checkBind :: forall m a b c.
   -> QC Unit
 checkBind = checkBind' (==)
 
+checkBindInstance' :: forall m a b c.
+  ( Arbitrary (m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary a
+  , Show (m a), Show (m c) )
+  => CustomEq (m c) -> m a -> m b -> QC Unit
+checkBindInstance' (==) _ _ = checkBind' (==) (>>=) (>>=) (>>=)
+
 -- checkMonad :: forall m a.
 --   ( Monad m
 --   , Arbitrary a
@@ -337,7 +346,6 @@ checkBind = checkBind' (==)
 -- checkMonad t = do
 --   quickCheck $ leftIdentity t
 --   quickCheck $ rightIdentity t
---   quickCheck $ associativity t
 --
 --   where
 --
@@ -348,4 +356,3 @@ checkBind = checkBind' (==)
 --   rightIdentity _ m = (m >>= return) == m
 --
 --   associativity ::  m a -> m a -> (a -> m a) -> (a -> m a) -> Boolean
---   associativity _ m f g = ((m >>= f) >>= g) == (m >>= (\x -> f x >>= g))
