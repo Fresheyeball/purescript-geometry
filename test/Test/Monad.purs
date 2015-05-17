@@ -350,8 +350,7 @@ checkBindInstance :: forall m a b c.
   => m a -> m b -> m c -> QC Unit
 checkBindInstance ma mb _ = checkBindInstance' ((==) :: CustomEq (m c)) ma mb
 
-
-checkMonad :: forall m a b c.
+checkMonad' :: forall m a b c.
   ( Arbitrary (m a)
   , Arbitrary (a -> m a)
   , Arbitrary (a -> m b)
@@ -362,70 +361,57 @@ checkMonad :: forall m a b c.
   , Arbitrary b
   , Arbitrary c, CoArbitrary c
   , Arbitrary (m c)
-  , Show a, Show (m a), Show (m b), Show (m c) )
+  , Show a, Show c, Show (m a), Show (m b), Show (m c) )
   => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c)
   -> Bind m a a
   -> Bind m a b
   -> Bind m a c
   -> Bind m b c
+  -> Bind m c c
   -> Pure m a
-
-  -> Fmap m c c
-
-  -- identity
-  -> Ap m a a
-  -> Pure m (a -> a)
-
-  -- Composition
-  -> Ap m (b -> c) ((a -> b) -> a -> c)
-  -> Pure m (Category (->) a b c)
-
-  -- Apply
-  -> Fmap m (b -> c) ((a -> b) -> a -> c)
-  -> Ap m a c
-  -> Ap m (a -> b) (a -> c)
-  -> Ap m a b
-  -> Ap m b c
-
-  -- homomorphism
-  -> Pure m b
-  -> Pure m a
-  -> Ap m a b
-  -> Pure m (a -> b)
-
-  -- interchange
-  -> Ap m (a -> b) b
-  -> Pure m ((a -> b) -> b)
-
+  -> Pure m c
   -> QC Unit
-checkMonad
-  (==) (===) (====) bindaa bindab bindac bindbc return
-  (<$>) idAPv pureId
-  pureleftAPu pureleft
-  leftFMAPu vAPw uAPv _vAPw_ uAP_v
-  pureb purea fAPpurea pureAB
-  y_APu pure_X = do
-
-  trace "Monad <= Applicative"
-  checkApplicative'
-    (==) (===) (====) (<$>) idAPv pureId
-    pureleftAPu pureleft
-    leftFMAPu vAPw uAPv _vAPw_ uAP_v
-    pureb purea fAPpurea pureAB
-    y_APu pure_X
+checkMonad'
+  (==) (===) (====) bindaa bindab bindac bindbc bindcc returna returnc = do
 
   trace "Monad <= Bind"
   checkBind' (====) bindab bindbc bindac
 
-  -- quickCheck leftIdentity
+  quickCheck leftIdentity
   quickCheck rightIdentity
 
   where
 
-  -- leftIdentity :: a -> (a -> m a) -> Result
-  -- leftIdentity x f = (return x `bindaa` f) == (f x)
-  --   <?> "woah"
+  leftIdentity :: c -> (c -> m c) -> Result
+  leftIdentity x f = (returnc x `bindcc` f) ==== (f x)
+    <?> "woah, no left id on Monad bro, when"
+    <> "\n x = " <> show x
+    <> "\n and like"
+    <> "\n return x >>= f = " <> show (returnc x `bindcc` f)
+    <> "\n but totally"
+    <> "\n f x = " <> show (f x)
 
   rightIdentity :: m a -> Result
-  rightIdentity m = (m `bindaa` return) == m
-    <?> "woah"
+  rightIdentity m = (m `bindaa` returna) == m
+    <?> "woah, no right id on Monad bro, when"
+    <> "\n m = " <> show m
+    <> "\n but like"
+    <> "\n m >>= return = " <> show (m `bindaa` returna)
+
+checkMonadInstance' :: forall m a b c.
+  ( Monad m
+  , Arbitrary (m a)
+  , Arbitrary (a -> m a)
+  , Arbitrary (a -> m b)
+  , Arbitrary (b -> m c)
+  , Arbitrary (m (a -> b))
+  , Arbitrary (m (b -> c))
+  , Arbitrary a, CoArbitrary a
+  , Arbitrary b
+  , Arbitrary c, CoArbitrary c
+  , Arbitrary (m c)
+  , Show a, Show c, Show (m a), Show (m b), Show (m c) )
+  => CustomEq (m a) -> CustomEq (m b) -> CustomEq (m c) -> QC Unit
+checkMonadInstance' (==) (===) (====) = checkMonad'
+  (==) (===) (====)
+  (>>=) (>>=) (>>=) (>>=) (>>=) pure pure
